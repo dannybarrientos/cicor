@@ -344,10 +344,5 @@ Mermaid.js. (2024). Diagramming and charting tool. https://mermaid.js.org/
 
 ---
 
-> 🎓 **Integridad Académica**: Este documento es una estructura técnica validada para que tu equipo revise, ajuste y documente sus decisiones reales. Asegúrate de:
-> 1. Verificar nombres y disponibilidad de servicios AWS según tu región.
-> 2. Generar e insertar tus propios diagramas (draw.io/Lucidchart) si el entorno de entrega no soporta renderizado nativo de Mermaid.
-> 3. Citar cualquier librería, API o referencia externa según APA/MLA.
-> 4. Adaptar el stack de lenguajes a las competencias reales del equipo.
 
 ¿Necesitas que genere un **template de AWS CDK en TypeScript** para desplegar la infraestructura base, o un **esquema de base de datos (DynamoDB + RDS)** listo para implementar? Solo indícalo y lo preparo paso a paso. 🛠️
