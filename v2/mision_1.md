@@ -39,7 +39,7 @@ El sistema CICOR es una plataforma de planificación de recursos empresariales (
 * **Módulos a Base de Datos**: Cada API escrita en Python se comunica de forma exclusiva y directa con su propio contenedor de base de datos PostgreSQL utilizando el protocolo TCP/IP sobre el puerto 5432, previniendo el acoplamiento a nivel de datos;
 * **Módulos a Almacenamiento Externo**: Las APIs interactúan con el servicio AWS S3 a través de llamadas a la API de AWS (mediante la librería Boto3 en Python) sobre HTTPS para el almacenamiento y recuperación de archivos adjuntos y documentos operativos.
 
-# 6. Diagrama de arquitectura
+## 5. Diagrama de arquitectura
 ```mermaid
 graph TD
     Client[Client / Web Browser]
@@ -95,7 +95,7 @@ graph TD
     H_API -. HTTPS .-> S3
 ```
 
-# 7. Servicios de nube y herramientas a utilizar
+## 6. Servicios de nube y herramientas a utilizar
 * Docker.
 * Docker Compose.
 * AWS EC2.
@@ -116,7 +116,7 @@ graph TD
 * WhatsApp Business API.
 * Otros: GitHub, GitHub Actions, VS Code, Postman, DBeaver, Terraform.
 
-# 8. Gestión de volúmenes y almacenamiento
+## 7. Gestión de volúmenes y almacenamiento
 * **Datos transaccionales**: La información estructurada de negocio es el activo principal que debe persistir en las bases de datos relacionales;
 * **Archivos no estructurados**: Documentos, facturas en PDF, y recursos multimedia generados por el ERP deben persistir a largo plazo sin depender del ciclo de vida de los contenedores;
 * **Ambiente Local**: Se emplean volúmenes administrados por Docker (Docker named volumes) definidos en el archivo `docker-compose.yml` para garantizar la persistencia de los contenedores PostgreSQL durante el desarrollo;
@@ -124,14 +124,14 @@ graph TD
 * **Ambiente Prod**: Al igual que en entornos inferiores, se utilizan volúmenes AWS EBS respaldados por políticas de AWS Lifecycle Manager para la generación de snapshots diarios;
 * **Almacenamiento S3**: Todos los ambientes integran un bucket S3 específico (ej. `acme-cicor-prod-us-east-1-s3-assets-01`) destinado a persistir los objetos binarios y estáticos de manera centralizada y desvinculada del cómputo.
 
-# 9. Seguridad
+## 8. Seguridad
 * **Aislamiento de red**: Los contenedores de las APIs y las bases de datos operan estrictamente dentro de subredes privadas, siendo inaccesibles desde internet; el acceso público queda restringido exclusivamente a las subredes públicas donde residen los balanceadores o el API Gateway;
 * **Grupos de seguridad**: Se aplican restricciones de firewall a nivel de instancia mediante nomenclatura estándar, como `acme-cicor-prod-us-east-1-sg-web-01` (abierto al puerto 80/443) y `acme-cicor-prod-us-east-1-sg-app-01` (comunicación exclusiva desde el SG web);
 * **Gestión de secretos locales**: Para el entorno de desarrollo y la configuración base de Docker Compose se utilizan archivos `.env` excluidos del control de versiones mediante `.gitignore`;
 * **Gestión de credenciales en nube**: Se evita el uso de claves de acceso estáticas (Access Keys) para la conexión a AWS S3; en su lugar, se asignan roles de AWS IAM (`acme-cicor-prod-us-east-1-iam-role-app-01`) directamente a la instancia AWS EC2, otorgando a los contenedores permisos temporales de acceso;
 * **Protección de variables**: Las cadenas de conexión a las bases de datos, tokens JWT, claves de encriptación y credenciales de servicios compartidos se inyectan en los contenedores estrictamente como variables de entorno al momento del despliegue.
 
-# 10. Criterios de éxito
+## 9. Criterios de éxito
 * Los seis módulos de CICOR se ejecutan como contenedores Docker independientes bajo una misma red de Docker Compose sin colisiones de puertos;
 * La comunicación entre el API de un módulo y su respectiva base de datos es funcional y los datos persisten exitosamente tras la eliminación y recreación del contenedor;
 * Las peticiones HTTP simuladas mediante Postman hacia el `cicor-apigateway-dev-01` son enrutadas correctamente a la API del módulo correspondiente;
