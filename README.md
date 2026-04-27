@@ -343,6 +343,3 @@ Mermaid.js. (2024). Diagramming and charting tool. https://mermaid.js.org/
 ```
 
 ---
-
-
-¿Necesitas que genere un **template de AWS CDK en TypeScript** para desplegar la infraestructura base, o un **esquema de base de datos (DynamoDB + RDS)** listo para implementar? Solo indícalo y lo preparo paso a paso. 🛠️
