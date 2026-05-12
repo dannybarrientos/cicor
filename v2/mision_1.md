@@ -46,114 +46,78 @@ El sistema CICOR es una plataforma de planificación de recursos empresariales (
 
 ## 5. Diagrama de arquitectura
 ```mermaid
-graph TB
-    Client[Client / Web Browser]
+flowchart TB
+    Client[Client]
     Internet[Internet / HTTPS]
-    
-    Client -->|HTTPS| Internet
-    
-    Internet -->|HTTPS| AWS_ELB["AWS ELB<br/>Load Balancer"]
-    
-    AWS_ELB -->|HTTP| IC["Ingress Controller<br/>cicor-ingress-controller-prod<br/>Namespace: default"]
-    
-    subgraph EKS_Cluster["AWS EKS Cluster (us-east-1)"]
-        subgraph NS_Default["Namespace: default"]
-            FE["Frontend Deployment<br/>cicor-frontend-prod<br/>Pod: React/Node.js<br/>Service: cicor-frontend-svc<br/>Type: ClusterIP"]
-            IC
+    ELB["AWS ELB\nLoad Balancer"]
+    IC["Ingress Controller\ncicor-ingress-controller-prod\nnamespace: default"]
+
+    Client -->|HTTPS| Internet -->|HTTPS| ELB -->|HTTP| IC
+
+    subgraph VPC["AWS VPC\nacme-cicor-prod-us-east-1-vpc-network-01"]
+        direction TB
+
+        subgraph Public["Public Subnet"]
+            direction TB
+            ELB
         end
-        
-        subgraph NS_Commercial["Namespace: cicor-commercial"]
-            C_API["API Deployment<br/>cicor-commercial-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-commercial-api-svc<br/>Type: ClusterIP"]
-            C_DB["Database Deployment<br/>cicor-commercial-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-commercial-pvc<br/>Port: 5432"]
-        end
-        
-        subgraph NS_Inventory["Namespace: cicor-inventory"]
-            I_API["API Deployment<br/>cicor-inventory-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-inventory-api-svc<br/>Type: ClusterIP"]
-            I_DB["Database Deployment<br/>cicor-inventory-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-inventory-pvc<br/>Port: 5432"]
-        end
-        
-        subgraph NS_Accounting["Namespace: cicor-accounting"]
-            A_API["API Deployment<br/>cicor-accounting-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-accounting-api-svc<br/>Type: ClusterIP"]
-            A_DB["Database Deployment<br/>cicor-accounting-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-accounting-pvc<br/>Port: 5432"]
-        end
-        
-        subgraph NS_Operations["Namespace: cicor-operations"]
-            O_API["API Deployment<br/>cicor-operations-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-operations-api-svc<br/>Type: ClusterIP"]
-            O_DB["Database Deployment<br/>cicor-operations-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-operations-pvc<br/>Port: 5432"]
-        end
-        
-        subgraph NS_HR["Namespace: cicor-hr"]
-            H_API["API Deployment<br/>cicor-hr-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-hr-api-svc<br/>Type: ClusterIP"]
-            H_DB["Database Deployment<br/>cicor-hr-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-hr-pvc<br/>Port: 5432"]
-        end
-        
-        subgraph NS_Admin["Namespace: cicor-admin"]
-            AD_API["API Deployment<br/>cicor-admin-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-admin-api-svc<br/>Type: ClusterIP"]
-            AD_DB["Database Deployment<br/>cicor-admin-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-admin-pvc<br/>Port: 5432"]
-        end
-        
-        subgraph Node_Group["Node Group (Auto Scaling)<br/>acme-cicor-prod-us-east-1-nodegroup-01"]
-            Nodes["Worker Nodes<br/>EC2 Instances"]
-        end
-        
-        subgraph Storage["Almacenamiento Persistente"]
-            EBS["AWS EBS Volumes<br/>(PersistentVolumes)"]
+
+        subgraph Private["Private Subnet"]
+            direction TB
+
+            subgraph Cluster["AWS EKS Cluster\nus-east-1"]
+                direction TB
+
+                subgraph NodeGroup["Node Group\nacme-cicor-prod-us-east-1-nodegroup-01"]
+                    direction TB
+                    Nodes["Worker Nodes\nEC2 Instances"]
+                end
+
+                subgraph DefaultNS["Namespace: default"]
+                    direction TB
+                    FE["frontend deployment\ncicor-frontend-prod\nservice: cicor-frontend-svc\nclusterip"]
+                end
+
+                subgraph AccountingNS["Namespace: cicor-accounting"]
+                    direction TB
+                    A_API["accounting api\ncicor-accounting-api-prod\nservice: cicor-accounting-api-svc\nclusterip"]
+                    A_DB["accounting db\ncicor-accounting-db-prod\npvc: cicor-accounting-pvc\nport 5432"]
+                end
+
+                subgraph InventoryNS["Namespace: cicor-inventory"]
+                    direction TB
+                    I_API["inventory api\ncicor-inventory-api-prod\nservice: cicor-inventory-api-svc\nclusterip"]
+                    I_DB["inventory db\ncicor-inventory-db-prod\npvc: cicor-inventory-pvc\nport 5432"]
+                end
+
+                subgraph Storage["Persistent Storage"]
+                    direction TB
+                    EBS["AWS EBS\nPersistentVolumes"]
+                end
+            end
         end
     end
-    
-    S3["AWS S3<br/>acme-cicor-prod-us-east-1-s3-assets-01<br/>Bucket: Archivos y Documentos"]
-    
-    subgraph VPC["AWS VPC<br/>acme-cicor-prod-us-east-1-vpc-network-01"]
-        subgraph PubSubnet["Subnet Pública"]
-            AWS_ELB
-        end
-        subgraph PrivSubnet["Subnet Privada"]
-            EKS_Cluster
-        end
-    end
-    
+
+    S3["AWS S3\nacme-cicor-prod-us-east-1-s3-assets-01"]
+
     IC -->|HTTP| FE
-    IC -->|HTTP| C_API
-    IC -->|HTTP| I_API
     IC -->|HTTP| A_API
-    IC -->|HTTP| O_API
-    IC -->|HTTP| H_API
-    IC -->|HTTP| AD_API
-    
-    C_API -->|TCP/5432| C_DB
-    I_API -->|TCP/5432| I_DB
+    IC -->|HTTP| I_API
+
     A_API -->|TCP/5432| A_DB
-    O_API -->|TCP/5432| O_DB
-    H_API -->|TCP/5432| H_DB
-    AD_API -->|TCP/5432| AD_DB
-    
-    C_API -.->|HTTPS| S3
-    I_API -.->|HTTPS| S3
+    I_API -->|TCP/5432| I_DB
+
     A_API -.->|HTTPS| S3
-    O_API -.->|HTTPS| S3
-    H_API -.->|HTTPS| S3
-    AD_API -.->|HTTPS| S3
-    
-    C_DB -->|Persist| EBS
-    I_DB -->|Persist| EBS
+    I_API -.->|HTTPS| S3
+
     A_DB -->|Persist| EBS
-    O_DB -->|Persist| EBS
-    H_DB -->|Persist| EBS
-    AD_DB -->|Persist| EBS
-    
-    Nodes -->|Host| FE
-    Nodes -->|Host| C_API
-    Nodes -->|Host| I_API
-    Nodes -->|Host| A_API
-    Nodes -->|Host| O_API
-    Nodes -->|Host| H_API
-    Nodes -->|Host| AD_API
-    Nodes -->|Host| C_DB
-    Nodes -->|Host| I_DB
-    Nodes -->|Host| A_DB
-    Nodes -->|Host| O_DB
-    Nodes -->|Host| H_DB
-    Nodes -->|Host| AD_DB
+    I_DB -->|Persist| EBS
+
+    Nodes --> FE
+    Nodes --> A_API
+    Nodes --> I_API
+    Nodes --> A_DB
+    Nodes --> I_DB
 ```
 
 ## 6. Servicios de nube y herramientas a utilizar
