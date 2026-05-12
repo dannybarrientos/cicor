@@ -26,10 +26,10 @@ El equipo desarrolla principalmente en Python; por tanto, cuando sea pertinente,
 - El uso de punto y coma `;` es obligatorio cuando aplique en listados y enumeraciones;
 - Respetar estrictamente la estructura solicitada;
 - No inventar servicios fuera del alcance del primer levantamiento si no están justificados;
-- La primera versión solo debe cubrir temas acordes a: Docker; Docker Compose; AWS S3; AWS EC2; AWS VPC; subredes; y componentes directamente relacionados con arquitectura y contenedores;
+- La primera versión debe cubrir temas acordes a: Docker; Kubernetes; AWS EKS; AWS ECS; AWS S3; AWS VPC; subredes; Deployments; Pods; Services; Namespaces; PersistentVolumes; y componentes directamente relacionados con orquestación y arquitectura de contenedores;
 - No profundizar en código;
 - No describir lógica de negocio detallada salvo para contextualizar módulos y comunicación;
-- Si propones nombres de contenedores, bases de datos, tablas o recursos de AWS; deben estar en inglés y en minúscula.
+- Si propones nombres de Deployments, Pods, Services, bases de datos, tablas o recursos de AWS; deben estar en inglés y en minúscula.
 
 ## Convención de nombres
 ### Contenedores
@@ -68,13 +68,27 @@ Usa esta nomenclatura:
 `company-system-env-region-resource-function-num`
 
 Reglas:
-- Todo en minúscula;
-- En inglés;
+- Todo en minúscula.
+- En inglés.
 - Mantener consistencia con la convención general.
 
 Ejemplo:
-- `acme-cicor-dev-us-east-1-sg-app-01`;
+- `acme-cicor-dev-us-east-1-sg-app-01`.
 - `acme-cicor-prod-us-east-1-sg-db-01`.
+
+### Recursos de Kubernetes
+Usa esta nomenclatura para Deployments, Services y Namespaces:
+`<project>-<service>-<env>`
+
+Reglas:
+- Todo en minúscula.
+- En inglés.
+- `env` solo puede ser: `dev`, `qa`, `prod`;
+- Los Namespaces deben agrupar módulos lógicos (ej. `cicor-commercial`).
+
+Ejemplo:
+- Namespace: `cicor-commercial`; Deployment: `cicor-commercial-api-prod`; Service: `cicor-commercial-api-svc`.
+- Namespace: `cicor-inventory`; Deployment: `cicor-inventory-api-prod`; Service: `cicor-inventory-api-svc`.
 
 ## Estructura obligatoria de la documentación
 Debes responder exactamente con estas secciones, en este orden:
@@ -87,77 +101,80 @@ Debes responder exactamente con estas secciones, en este orden:
    - Describe de forma breve y formal el valor del ERP.
 
 3. **Alcance de la primera versión**
-   - Define exclusivamente lo que puede realizarse en la primera instancia;
-   - Limita el alcance a Docker; Docker Compose; AWS S3; AWS EC2; AWS VPC; subredes; y componentes afines;
-   - Indica qué módulos quedan contemplados en esta fase y cómo.
+   - Define exclusivamente lo que puede realizarse en la primera instancia.
+   - Limita el alcance a: Kubernetes; AWS EKS; AWS VPC; subredes; Deployments; Pods; Services; Namespaces; PersistentVolumes; ConfigMaps; Secrets; Ingress Controller; y archivos de configuración locales en el repositorio.
+   - Especifica que la primera versión incluye ÚNICAMENTE dos módulos: Contabilidad e Inventario.
+   - Incluye despliegue de contenedores frontend, APIs de ambos módulos y bases de datos asociadas, sin código o lógica de negocio significativa, solo arquitectura de contenedores.
+   - Establece que todos los archivos de configuración (manifiestos Kubernetes, Dockerfiles, variables de entorno) residen en el mismo repositorio.
+   - Define despliegue como ejercicio arquitectónico en AWS EKS sin persistencia de datos entre ambientes.
 
 4. **Contenedores y tecnologías a utilizar**
-   - Presenta una tabla;
+   - Presenta una tabla.
    - Columnas obligatorias:
-     - `Contenedor`;
-     - `Rol / Función`;
-     - `Tecnología principal`;
-     - `Persistencia` (`Sí` o `No`);
-   - Debe parecer un sistema basado en microservicios;
-   - Usa tecnologías actuales y comunes; preferentemente compatibles con Python cuando aplique;
-   - Considera frontend; backend; bases de datos; servicios compartidos; administración; observabilidad básica si aplica al alcance.
+     - `Contenedor`.
+     - `Rol / Función`.
+     - `Tecnología principal`.
+     - `Persistencia` (`Sí` o `No`).
+   - Debe parecer un sistema basado en microservicios.
+   - Usa tecnologías actuales y comunes; preferentemente compatibles con Python cuando aplique.
+   - Considera frontend, backend, bases de datos, servicios compartidos, administración, observabilidad básica si aplica al alcance.
 
 5. **Comunicación entre componentes**
-   - Explica cómo se comunican los módulos y servicios;
-   - Indica el protocolo de comunicación;
-   - Especifica qué servicios se comunican entre sí;
-   - Diferencia comunicación síncrona y desacoplada si aplica;
-   - Debe quedar claro el flujo entre frontend; APIs; módulos; base de datos; almacenamiento y servicios compartidos.
+   - Explica cómo se comunican los módulos y servicios.
+   - Indica el protocolo de comunicación.
+   - Especifica qué servicios se comunican entre sí.
+   - Diferencia comunicación síncrona y desacoplada si aplica.
+   - Debe quedar claro el flujo entre frontend, APIs, módulos, base de datos, almacenamiento y servicios compartidos.
 
 6. **Diagrama de arquitectura**
-   - Presenta un diagrama de componentes;
-   - Debe incluir rutas de comunicación;
-   - Debe mostrar bases de datos; almacenamiento; balanceadores o gateways si se usan;
-   - El diagrama debe entregarse obligatoriamente en formato Mermaid;
+   - Presenta un diagrama de componentes.
+   - Debe incluir rutas de comunicación.
+   - Debe mostrar bases de datos, almacenamiento, balanceadores o gateways si se usan.
+   - El diagrama debe entregarse obligatoriamente en formato Mermaid.
    - Si no puedes dibujarlo gráficamente, usa un diagrama Mermaid claro con flechas.
 
 7. **Servicios de nube y herramientas a utilizar**
-   - Lista todos los servicios de nube y herramientas locales que se deberían utilizar para CICOR;
-   - Incluye de forma integral todos los servicios necesarios para la arquitectura, despliegue, seguridad, observabilidad, almacenamiento, red, automatización, integración y operación del sistema;
-   - No limites la respuesta a unos pocos servicios;
-   - Si un servicio es aplicable a la solución, debe considerarse y justificarse en la documentación;
-   - GitHub; VS Code; Postman; etc, deben ir agrupados en un solo ítem llamado `Otros`;
+   - Lista todos los servicios de nube y herramientas locales que se deberían utilizar para CICOR.
+   - Incluye de forma integral todos los servicios necesarios para la arquitectura, despliegue, seguridad, observabilidad, almacenamiento, red, automatización, integración y operación del sistema.
+   - No limites la respuesta a unos pocos servicios.
+   - Si un servicio es aplicable a la solución, debe considerarse y justificarse en la documentación.
+   - GitHub, VS Code, Postman, etc, deben ir agrupados en un solo ítem llamado `Otros`.
    - Dentro de `Otros`, enumera las herramientas separadas por comas.
 
 8. **Gestión de volúmenes y almacenamiento**
-   - Especifica qué datos deben persistir;
-   - Indica dónde y cómo se almacenan en cada ambiente;
+   - Especifica qué datos deben persistir.
+   - Indica dónde y cómo se almacenan en cada ambiente.
    - Debe contemplar al menos:
-     - Local;
-     - Dev;
-     - QA;
-     - Prod;
-   - En local usa volúmenes de Docker;
-   - En AWS usa almacenamiento administrado y copias de seguridad según corresponda;
+     - Local.
+     - Dev.
+     - QA.
+     - Prod.
+   - En local usa volúmenes de Docker.
+   - En AWS usa almacenamiento administrado y copias de seguridad según corresponda.
    - Describe qué información va en volúmenes, qué va en bases de datos y qué va en S3.
 
 9. **Seguridad**
-   - Indica qué secretos deben protegerse;
-   - Explica si se usarán `.env`; IAM Roles; Secrets; variables de entorno u otros mecanismos;
-   - Debe quedar clara la separación entre ambientes;
-   - Incluye credenciales; claves; tokens; cadenas de conexión; certificados y cualquier secreto relevante.
+   - Indica qué secretos deben protegerse.
+   - Explica si se usarán `.env`, IAM Roles, Secrets, variables de entorno u otros mecanismos.
+   - Debe quedar clara la separación entre ambientes.
+   - Incluye credenciales, claves, tokens, cadenas de conexión, certificados y cualquier secreto relevante.
 
 10. **Criterios de éxito**
-    - Define condiciones medibles para considerar funcional el proyecto;
-    - Incluye criterios de aceptación;
-    - Formula casos de uso verificables;
-    - Evalúa cumplimiento técnico en base a despliegue; disponibilidad; comunicación; persistencia; seguridad y segregación por módulos.
+    - Define condiciones medibles para considerar funcional el proyecto.
+    - Incluye criterios de aceptación.
+    - Formula casos de uso verificables.
+    - Evalúa cumplimiento técnico en base a despliegue, disponibilidad, comunicación, persistencia, seguridad y segregación por módulos.
 
 ## Reglas de estilo de respuesta
-- Escribe con tono técnico; formal; académico y profesional;
-- Usa viñetas o tablas cuando aporten claridad;
-- Mantén respuestas concretas;
-- No agregues contenido fuera de las secciones solicitadas;
-- No expliques tu razonamiento interno;
-- No menciones que eres una IA;
-- No repitas la pregunta;
-- No generes contenido genérico sin relación con CICOR;
-- Si necesitas asumir algo; hazlo de forma mínima y coherente con AWS; Docker y arquitectura modular.
+- Escribe con tono técnico, formal, académico y profesional.
+- Usa viñetas o tablas cuando aporten claridad.
+- Mantén respuestas concretas.
+- No agregues contenido fuera de las secciones solicitadas.
+- No expliques tu razonamiento interno.
+- No menciones que eres una IA.
+- No repitas la pregunta.
+- No generes contenido genérico sin relación con CICOR.
+- Si necesitas asumir algo, hazlo de forma mínima y coherente con AWS, Docker y arquitectura modular.
 
 ## Criterio de calidad esperado
 La salida debe servir como base para documentación ejecutiva y técnica del proyecto CICOR; lista para presentar a un cliente o usar como insumo inicial de diseño de arquitectura cloud.

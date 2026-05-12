@@ -4,136 +4,215 @@
 El sistema CICOR es una plataforma de planificación de recursos empresariales (ERP) diseñada bajo una arquitectura modular y desacoplada. Su propósito central es integrar, automatizar y optimizar los procesos de negocio de la organización, garantizando la independencia operativa de sus áreas funcionales, pero permitiendo la interoperabilidad de los datos. El valor fundamental de CICOR radica en su capacidad para escalar horizontalmente de manera independiente según la demanda de cada módulo, centralizando la administración empresarial en una infraestructura en la nube resiliente, auditable y de alta disponibilidad.
 
 ## 2. Alcance de la primera versión
-* Despliegue de la infraestructura base utilizando AWS VPC para la segmentación de redes (subredes públicas y privadas);
-* Aprovisionamiento de instancias de cómputo virtual mediante AWS EC2 para el alojamiento de la plataforma;
-* Implementación de almacenamiento de objetos estáticos y documentos mediante AWS S3;
-* Orquestación y gestión del ciclo de vida de los contenedores a través de Docker y Docker Compose exclusivamente;
-* Contenerización independiente de los módulos: Comercial, Inventario, Contabilidad, Operaciones, Recursos Humanos y Administración;
-* Despliegue de bases de datos relacionales contenerizadas dentro de las instancias AWS EC2 para garantizar el almacenamiento persistente de cada módulo;
-* Configuración de grupos de seguridad para restringir el tráfico a nivel de red y transporte.
+* Despliegue de un contenedor frontend React bajo Kubernetes sin lógica de negocio significativa, únicamente una estructura base con rutas de navegación.
+* Despliegue de APIs de los módulos Contabilidad e Inventario implementadas en Python (FastAPI) como esqueletos funcionales, sin lógica de negocio compleja, solo endpoints REST básicos.
+* Despliegue de bases de datos PostgreSQL contenerizadas para ambos módulos (Contabilidad e Inventario) como Pods dentro del clúster EKS.
+* Creación de Namespaces segregados: `cicor-accounting` e `cicor-inventory` dentro del clúster Kubernetes.
+* Definición de Deployments independientes para cada contenedor: frontend, `cicor-accounting-api-prod`, `cicor-inventory-api-prod`, `cicor-accounting-db-prod`, `cicor-inventory-db-prod`.
+* Exposición de servicios mediante Services de tipo ClusterIP para comunicación interna entre Pods.
+* Implementación de un Ingress Controller básico (Nginx) para enrutamiento del tráfico externo hacia el frontend.
+* Provisión de almacenamiento persistente mediante PersistentVolumes y PersistentVolumeClaims para las bases de datos.
+* Gestión de configuración mediante Kubernetes ConfigMaps y Secrets para variables de entorno, credenciales de base de datos y configuración de aplicaciones.
+* Almacenamiento centralizado de todos los archivos de configuración (manifiestos YAML de Kubernetes, Dockerfiles, archivos `.env`) en el mismo repositorio.
+* Despliegue arquitectónico funcional en AWS EKS sin implementar persistencia de datos entre ambientes, enfocado únicamente en validar la orquestación de contenedores y comunicación entre componentes.
 
-## 3. Contenedores y tecnologías a utilizar
+## 3. Despliegues y tecnologías a utilizar
 
-| Contenedor | Rol / Función | Tecnología principal | Persistencia |
-| :--- | :--- | :--- | :--- |
-| `cicor-apigateway-prod-01` | Puerta de enlace de API y enrutamiento inverso | Nginx | No |
-| `cicor-frontend-prod-01` | Interfaz de usuario unificada del ERP | React | No |
-| `cicor-commercial-api-prod-01` | Lógica de negocio y servicios REST del módulo Comercial | Python (FastAPI) | No |
-| `cicor-commercial-db-prod-01` | Almacenamiento transaccional del módulo Comercial | PostgreSQL | Sí |
-| `cicor-inventory-api-prod-01` | Lógica de negocio y servicios REST del módulo Inventario | Python (FastAPI) | No |
-| `cicor-inventory-db-prod-01` | Almacenamiento transaccional del módulo Inventario | PostgreSQL | Sí |
-| `cicor-accounting-api-prod-01` | Lógica de negocio y servicios REST del módulo Contabilidad | Python (FastAPI) | No |
-| `cicor-accounting-db-prod-01` | Almacenamiento transaccional del módulo Contabilidad | PostgreSQL | Sí |
-| `cicor-operations-api-prod-01` | Lógica de negocio y servicios REST del módulo Operaciones | Python (FastAPI) | No |
-| `cicor-operations-db-prod-01` | Almacenamiento transaccional del módulo Operaciones | PostgreSQL | Sí |
-| `cicor-hr-api-prod-01` | Lógica de negocio y servicios REST del módulo Recursos Humanos | Python (FastAPI) | No |
-| `cicor-hr-db-prod-01` | Almacenamiento transaccional del módulo Recursos Humanos | PostgreSQL | Sí |
-| `cicor-admin-api-prod-01` | Lógica de negocio y servicios REST del módulo Administración | Python (FastAPI) | No |
-| `cicor-admin-db-prod-01` | Almacenamiento transaccional del módulo Administración | PostgreSQL | Sí |
+| Namespace | Deployment | Rol / Función | Tecnología principal | Tipo de Pod | Persistencia |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `default` | `cicor-ingress-controller-prod` | Controlador de Ingress y enrutamiento de tráfico externo | Nginx Ingress | Contenedor Nginx | No |
+| `default` | `cicor-frontend-prod` | Interfaz de usuario unificada del ERP | React (Node.js) | Contenedor Frontend | No |
+| `cicor-commercial` | `cicor-commercial-api-prod` | Lógica de negocio y servicios REST del módulo Comercial | Python (FastAPI) | Pod API | No |
+| `cicor-commercial` | `cicor-commercial-db-prod` | Almacenamiento transaccional del módulo Comercial | PostgreSQL | Pod Base de Datos | Sí |
+| `cicor-inventory` | `cicor-inventory-api-prod` | Lógica de negocio y servicios REST del módulo Inventario | Python (FastAPI) | Pod API | No |
+| `cicor-inventory` | `cicor-inventory-db-prod` | Almacenamiento transaccional del módulo Inventario | PostgreSQL | Pod Base de Datos | Sí |
+| `cicor-accounting` | `cicor-accounting-api-prod` | Lógica de negocio y servicios REST del módulo Contabilidad | Python (FastAPI) | Pod API | No |
+| `cicor-accounting` | `cicor-accounting-db-prod` | Almacenamiento transaccional del módulo Contabilidad | PostgreSQL | Pod Base de Datos | Sí |
+| `cicor-operations` | `cicor-operations-api-prod` | Lógica de negocio y servicios REST del módulo Operaciones | Python (FastAPI) | Pod API | No |
+| `cicor-operations` | `cicor-operations-db-prod` | Almacenamiento transaccional del módulo Operaciones | PostgreSQL | Pod Base de Datos | Sí |
+| `cicor-hr` | `cicor-hr-api-prod` | Lógica de negocio y servicios REST del módulo Recursos Humanos | Python (FastAPI) | Pod API | No |
+| `cicor-hr` | `cicor-hr-db-prod` | Almacenamiento transaccional del módulo Recursos Humanos | PostgreSQL | Pod Base de Datos | Sí |
+| `cicor-admin` | `cicor-admin-api-prod` | Lógica de negocio y servicios REST del módulo Administración | Python (FastAPI) | Pod API | No |
+| `cicor-admin` | `cicor-admin-db-prod` | Almacenamiento transaccional del módulo Administración | PostgreSQL | Pod Base de Datos | Sí |
 
 ## 4. Comunicación entre componentes
-* **Cliente a Interfaz**: Los usuarios finales interactúan con el contenedor `cicor-frontend-prod-01` a través del protocolo HTTPS;
-* **Frontend a Backend**: El frontend realiza peticiones asíncronas RESTful en formato JSON hacia el `cicor-apigateway-prod-01`;
-* **Enrutamiento interno**: El API Gateway actúa como proxy inverso, redirigiendo las peticiones HTTP internas al contenedor API correspondiente (ej. `cicor-commercial-api-prod-01`) basándose en el path de la URI;
-* **Comunicación inter-módulos**: La comunicación entre los distintos módulos del ERP se realiza de forma síncrona mediante peticiones HTTP/REST a nivel de la red privada de Docker, garantizando el desacoplamiento de la lógica de negocio;
-* **Módulos a Base de Datos**: Cada API escrita en Python se comunica de forma exclusiva y directa con su propio contenedor de base de datos PostgreSQL utilizando el protocolo TCP/IP sobre el puerto 5432, previniendo el acoplamiento a nivel de datos;
-* **Módulos a Almacenamiento Externo**: Las APIs interactúan con el servicio AWS S3 a través de llamadas a la API de AWS (mediante la librería Boto3 en Python) sobre HTTPS para el almacenamiento y recuperación de archivos adjuntos y documentos operativos.
+* **Tráfico externo**: Los usuarios finales acceden a través del protocolo HTTPS al Ingress Controller (`cicor-ingress-controller-prod`), que actúa como puerta de enlace única del clúster.
+* **Ingress a Frontend**: El Ingress Controller enruta el tráfico HTTPS al Service `cicor-frontend-svc` (tipo ClusterIP) en el Namespace `default`, exponiendo el Pod frontend.
+* **Frontend a APIs**: El frontend realiza peticiones asíncronas RESTful en formato JSON contra la Ingress, que las distribuye a los Services correspondientes según la ruta URI.
+* **Comunicación intra-clúster**: Los Pods se comunican entre sí utilizando DNS interno de Kubernetes (ej. `cicor-commercial-api-svc.cicor-commercial.svc.cluster.local`) mediante peticiones HTTP sobre el puerto 80, con aislamiento garantizado por el Namespace.
+* **APIs a Bases de Datos**: Cada Deployment API se comunica de forma exclusiva y directa con su Pod base de datos correspondiente (mismo Namespace) utilizando el protocolo TCP/IP sobre el puerto 5432, con credenciales inyectadas como Kubernetes Secrets.
+* **Módulos a Almacenamiento Externo**: Los Pods API interactúan con el servicio AWS S3 a través de llamadas HTTPS (librería Boto3 en Python), usando permisos delegados por IAM Roles adjuntos al clúster EKS, sin requerir credenciales estáticas en el código.
+* **Service Discovery**: Kubernetes proporciona DNS interno para la resolución automática de Services, eliminando la necesidad de gestión manual de direcciones IP entre Pods.
 
 ## 5. Diagrama de arquitectura
 ```mermaid
-graph TD
+graph TB
     Client[Client / Web Browser]
-
-    subgraph acme-cicor-prod-us-east-1-vpc-network-01
-        
-        subgraph Public Subnet
-            GW[cicor-apigateway-prod-01<br/>Nginx]
-            FE[cicor-frontend-prod-01<br/>React]
+    Internet[Internet / HTTPS]
+    
+    Client -->|HTTPS| Internet
+    
+    Internet -->|HTTPS| AWS_ELB["AWS ELB<br/>Load Balancer"]
+    
+    AWS_ELB -->|HTTP| IC["Ingress Controller<br/>cicor-ingress-controller-prod<br/>Namespace: default"]
+    
+    subgraph EKS_Cluster["AWS EKS Cluster (us-east-1)"]
+        subgraph NS_Default["Namespace: default"]
+            FE["Frontend Deployment<br/>cicor-frontend-prod<br/>Pod: React/Node.js<br/>Service: cicor-frontend-svc<br/>Type: ClusterIP"]
+            IC
         end
-
-        subgraph Private Subnet - AWS EC2: acme-cicor-prod-us-east-1-ec2-app-01
-            subgraph APIs Modulares
-                C_API[cicor-commercial-api-prod-01]
-                I_API[cicor-inventory-api-prod-01]
-                A_API[cicor-accounting-api-prod-01]
-                O_API[cicor-operations-api-prod-01]
-                H_API[cicor-hr-api-prod-01]
-                AD_API[cicor-admin-api-prod-01]
-            end
-
-            subgraph Bases de Datos
-                C_DB[(cicor-commercial-db-prod-01)]
-                I_DB[(cicor-inventory-db-prod-01)]
-                A_DB[(cicor-accounting-db-prod-01)]
-                O_DB[(cicor-operations-db-prod-01)]
-                H_DB[(cicor-hr-db-prod-01)]
-                AD_DB[(cicor-admin-db-prod-01)]
-            end
+        
+        subgraph NS_Commercial["Namespace: cicor-commercial"]
+            C_API["API Deployment<br/>cicor-commercial-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-commercial-api-svc<br/>Type: ClusterIP"]
+            C_DB["Database Deployment<br/>cicor-commercial-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-commercial-pvc<br/>Port: 5432"]
+        end
+        
+        subgraph NS_Inventory["Namespace: cicor-inventory"]
+            I_API["API Deployment<br/>cicor-inventory-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-inventory-api-svc<br/>Type: ClusterIP"]
+            I_DB["Database Deployment<br/>cicor-inventory-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-inventory-pvc<br/>Port: 5432"]
+        end
+        
+        subgraph NS_Accounting["Namespace: cicor-accounting"]
+            A_API["API Deployment<br/>cicor-accounting-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-accounting-api-svc<br/>Type: ClusterIP"]
+            A_DB["Database Deployment<br/>cicor-accounting-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-accounting-pvc<br/>Port: 5432"]
+        end
+        
+        subgraph NS_Operations["Namespace: cicor-operations"]
+            O_API["API Deployment<br/>cicor-operations-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-operations-api-svc<br/>Type: ClusterIP"]
+            O_DB["Database Deployment<br/>cicor-operations-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-operations-pvc<br/>Port: 5432"]
+        end
+        
+        subgraph NS_HR["Namespace: cicor-hr"]
+            H_API["API Deployment<br/>cicor-hr-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-hr-api-svc<br/>Type: ClusterIP"]
+            H_DB["Database Deployment<br/>cicor-hr-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-hr-pvc<br/>Port: 5432"]
+        end
+        
+        subgraph NS_Admin["Namespace: cicor-admin"]
+            AD_API["API Deployment<br/>cicor-admin-api-prod<br/>Pod: Python/FastAPI<br/>Service: cicor-admin-api-svc<br/>Type: ClusterIP"]
+            AD_DB["Database Deployment<br/>cicor-admin-db-prod<br/>Pod: PostgreSQL<br/>PVC: cicor-admin-pvc<br/>Port: 5432"]
+        end
+        
+        subgraph Node_Group["Node Group (Auto Scaling)<br/>acme-cicor-prod-us-east-1-nodegroup-01"]
+            Nodes["Worker Nodes<br/>EC2 Instances"]
+        end
+        
+        subgraph Storage["Almacenamiento Persistente"]
+            EBS["AWS EBS Volumes<br/>(PersistentVolumes)"]
         end
     end
-
-    S3[acme-cicor-prod-us-east-1-s3-assets-01<br/>AWS S3]
-
-    Client -- HTTPS --> GW
-    GW -- HTTP --> FE
-    GW -- HTTP --> C_API
-    GW -- HTTP --> I_API
-    GW -- HTTP --> A_API
-    GW -- HTTP --> O_API
-    GW -- HTTP --> H_API
-    GW -- HTTP --> AD_API
-
-    C_API -- TCP/5432 --> C_DB
-    I_API -- TCP/5432 --> I_DB
-    A_API -- TCP/5432 --> A_DB
-    O_API -- TCP/5432 --> O_DB
-    H_API -- TCP/5432 --> H_DB
-    AD_API -- TCP/5432 --> AD_DB
-
-    C_API -. HTTPS .-> S3
-    I_API -. HTTPS .-> S3
-    H_API -. HTTPS .-> S3
+    
+    S3["AWS S3<br/>acme-cicor-prod-us-east-1-s3-assets-01<br/>Bucket: Archivos y Documentos"]
+    
+    subgraph VPC["AWS VPC<br/>acme-cicor-prod-us-east-1-vpc-network-01"]
+        subgraph PubSubnet["Subnet Pública"]
+            AWS_ELB
+        end
+        subgraph PrivSubnet["Subnet Privada"]
+            EKS_Cluster
+        end
+    end
+    
+    IC -->|HTTP| FE
+    IC -->|HTTP| C_API
+    IC -->|HTTP| I_API
+    IC -->|HTTP| A_API
+    IC -->|HTTP| O_API
+    IC -->|HTTP| H_API
+    IC -->|HTTP| AD_API
+    
+    C_API -->|TCP/5432| C_DB
+    I_API -->|TCP/5432| I_DB
+    A_API -->|TCP/5432| A_DB
+    O_API -->|TCP/5432| O_DB
+    H_API -->|TCP/5432| H_DB
+    AD_API -->|TCP/5432| AD_DB
+    
+    C_API -.->|HTTPS| S3
+    I_API -.->|HTTPS| S3
+    A_API -.->|HTTPS| S3
+    O_API -.->|HTTPS| S3
+    H_API -.->|HTTPS| S3
+    AD_API -.->|HTTPS| S3
+    
+    C_DB -->|Persist| EBS
+    I_DB -->|Persist| EBS
+    A_DB -->|Persist| EBS
+    O_DB -->|Persist| EBS
+    H_DB -->|Persist| EBS
+    AD_DB -->|Persist| EBS
+    
+    Nodes -->|Host| FE
+    Nodes -->|Host| C_API
+    Nodes -->|Host| I_API
+    Nodes -->|Host| A_API
+    Nodes -->|Host| O_API
+    Nodes -->|Host| H_API
+    Nodes -->|Host| AD_API
+    Nodes -->|Host| C_DB
+    Nodes -->|Host| I_DB
+    Nodes -->|Host| A_DB
+    Nodes -->|Host| O_DB
+    Nodes -->|Host| H_DB
+    Nodes -->|Host| AD_DB
 ```
 
 ## 6. Servicios de nube y herramientas a utilizar
+* AWS EKS (Elastic Kubernetes Service).
+* AWS ECS (Elastic Container Service) — como alternativa secundaria para servicios no orquestables en K8s.
+* Kubernetes (Deployments, Pods, Services, Namespaces, ConfigMaps, Secrets, PersistentVolumes, PersistentVolumeClaims, Network Policies, RBAC, Ingress Controller).
 * Docker.
-* Docker Compose.
-* AWS EC2.
-* AWS S3.
-* Amazon RDS.
-* Amazon DynamoDB.
-* Amazon Cognito.
-* AWS IAM.
-* AWS WAF.
-* AWS Secrets Manager.
-* Amazon API Gateway.
-* Amazon SES.
-* Amazon SNS/SQS.
-* Amazon CloudWatch.
-* AWS VPC.
-* Subredes (Públicas y Privadas de AWS).
-* Grupos de seguridad de AWS (Security Groups).
-* WhatsApp Business API.
-* Otros: GitHub, GitHub Actions, VS Code, Postman, DBeaver, Terraform.
+* AWS EC2 (como Worker Nodes del clúster EKS).
+* AWS VPC (segmentación de red).
+* Subredes Públicas y Privadas de AWS.
+* AWS ELB (Elastic Load Balancing) — exposición del Ingress Controller al exterior.
+* AWS Elastic IP — direccionamiento estático para NAT Gateways.
+* AWS IAM (gestión de roles y políticas para acceso a S3 y otros servicios).
+* AWS Secrets Manager — gestión centralizada de secretos en producción.
+* AWS S3 (almacenamiento de objetos y documentos).
+* AWS EBS (volúmenes persistentes para bases de datos).
+* AWS Backup — copias de seguridad automatizadas de snapshots de EBS.
+* AWS RDS (opcional) — alternativa administrada para bases de datos en versiones futuras.
+* AWS CloudWatch — observabilidad, logs y métricas del clúster EKS.
+* AWS CloudTrail — auditoría de eventos de API.
+* AWS Systems Manager Parameter Store — gestión de configuración centralizada.
+* Nginx Ingress Controller — enrutamiento HTTP/HTTPS y gestión de cerificados TLS.
+* Kubernetes Metrics Server — recopilación de métricas para HPA (Horizontal Pod Autoscaler).
+* cert-manager — gestión automática de certificados SSL/TLS.
+* Otros: GitHub, GitHub Actions, VS Code, Postman, DBeaver, Terraform, Helm, kubectl.
 
 ## 7. Gestión de volúmenes y almacenamiento
-* **Datos transaccionales**: La información estructurada de negocio es el activo principal que debe persistir en las bases de datos relacionales;
-* **Archivos no estructurados**: Documentos, facturas en PDF, y recursos multimedia generados por el ERP deben persistir a largo plazo sin depender del ciclo de vida de los contenedores;
-* **Ambiente Local**: Se emplean volúmenes administrados por Docker (Docker named volumes) definidos en el archivo `docker-compose.yml` para garantizar la persistencia de los contenedores PostgreSQL durante el desarrollo;
-* **Ambiente Dev/QA**: Se aprovisionan volúmenes AWS EBS adjuntos a las instancias AWS EC2 (`acme-cicor-dev-us-east-1-ec2-app-01` y `acme-cicor-qa-us-east-1-ec2-app-01`); estos volúmenes se mapean hacia los contenedores de bases de datos garantizando persistencia en reinicios de la instancia;
-* **Ambiente Prod**: Al igual que en entornos inferiores, se utilizan volúmenes AWS EBS respaldados por políticas de AWS Lifecycle Manager para la generación de snapshots diarios;
-* **Almacenamiento S3**: Todos los ambientes integran un bucket S3 específico (ej. `acme-cicor-prod-us-east-1-s3-assets-01`) destinado a persistir los objetos binarios y estáticos de manera centralizada y desvinculada del cómputo.
+* **Datos transaccionales**: La información estructurada de negocio persiste en los Pods de bases de datos PostgreSQL, respaldados por PersistentVolumeClaims (PVC) que se mapean a volúmenes EBS persistentes.
+* **Archivos no estructurados**: Documentos, facturas en PDF, y recursos multimedia generados por el ERP se almacenan en AWS S3, accesibles desde cualquier Pod mediante credenciales delegadas por IAM.
+* **Ambiente Local**: Se emplean volúmenes administrados por Docker (Docker named volumes) definidos en `docker-compose.yml` para garantizar la persistencia de contenedores PostgreSQL durante desarrollo local.
+* **Ambiente Dev**: Se aprovisionan volúmenes AWS EBS adjuntos a los nodos del clúster EKS (`acme-cicor-dev-us-east-1-eks-cluster-01`); se definen PersistentVolumes (PV) y PersistentVolumeClaims (PVC) en Kubernetes para cada base de datos, garantizando persistencia incluso tras la eliminación del Pod.
+* **Ambiente QA**: Configuración idéntica a Dev, con volúmenes EBS específicos (`acme-cicor-qa-us-east-1-eks-cluster-01`) y políticas de snapshot automáticas cada 12 horas.
+* **Ambiente Prod**: Volúmenes EBS de mayor capacidad con replicación multi-zona habilitada; snapshots diarios gestionados por AWS Backup; almacenamiento mínimo de 30 días de retención.
+* **Buckets S3**: Un bucket por ambiente (ej. `acme-cicor-dev-us-east-1-s3-assets-01`, `acme-cicor-prod-us-east-1-s3-assets-01`) para segregar datos y aplicar políticas de ciclo de vida independientes.
+* **ConfigMaps y Secrets**: Datos de configuración no sensibles van en ConfigMaps de Kubernetes (ej. variables de entorno); credenciales, cadenas de conexión y tokens van en Kubernetes Secrets (etcd encriptado).
+* **Estrategia de respaldo**: Snapshots de EBS cada 24 horas con retención de 90 días en producción; exportación diaria de dumps de bases de datos a S3 para recuperación de desastres.
 
 ## 8. Seguridad
-* **Aislamiento de red**: Los contenedores de las APIs y las bases de datos operan estrictamente dentro de subredes privadas, siendo inaccesibles desde internet; el acceso público queda restringido exclusivamente a las subredes públicas donde residen los balanceadores o el API Gateway;
-* **Grupos de seguridad**: Se aplican restricciones de firewall a nivel de instancia mediante nomenclatura estándar, como `acme-cicor-prod-us-east-1-sg-web-01` (abierto al puerto 80/443) y `acme-cicor-prod-us-east-1-sg-app-01` (comunicación exclusiva desde el SG web);
-* **Gestión de secretos locales**: Para el entorno de desarrollo y la configuración base de Docker Compose se utilizan archivos `.env` excluidos del control de versiones mediante `.gitignore`;
-* **Gestión de credenciales en nube**: Se evita el uso de claves de acceso estáticas (Access Keys) para la conexión a AWS S3; en su lugar, se asignan roles de AWS IAM (`acme-cicor-prod-us-east-1-iam-role-app-01`) directamente a la instancia AWS EC2, otorgando a los contenedores permisos temporales de acceso;
-* **Protección de variables**: Las cadenas de conexión a las bases de datos, tokens JWT, claves de encriptación y credenciales de servicios compartidos se inyectan en los contenedores estrictamente como variables de entorno al momento del despliegue.
+* **Aislamiento de Namespaces**: Cada módulo del ERP reside en su propio Namespace de Kubernetes (`cicor-commercial`, `cicor-inventory`, etc.), proporcionando aislamiento lógico a nivel de RBAC y NetworkPolicy.
+* **Network Policies**: Se aplican restricciones de firewall a nivel de red de Kubernetes mediante NetworkPolicies, limitando el tráfico entre Pods; solo los Pods del Ingress Controller pueden acceder a las APIs, y solo las APIs pueden acceder a sus respectivas bases de datos.
+* **Control de Acceso Basado en Roles (RBAC)**: Se definen Roles y RoleBindings por Namespace, restringiendo permisos de usuario y service accounts exclusivamente a las operaciones necesarias.
+* **Gestión de secretos**: Las credenciales de bases de datos (usuario, contraseña) se almacenan como Kubernetes Secrets (etcd encriptado en reposo); en producción, se integra AWS Secrets Manager para rotación automática de credenciales.
+* **Service Accounts**: Cada Deployment utiliza un Service Account específico con permisos mínimos necesarios; se asignan IAM Roles a los nodos EKS que heredan los Pods para acceso a AWS S3 sin credenciales estáticas.
+* **Variables de entorno**: La configuración sensible (claves de encriptación, tokens JWT, credenciales API) se inyecta en los contenedores como Kubernetes Secrets o a través de AWS Systems Manager Parameter Store.
+* **Configuración segura de Ingress**: El Ingress Controller utiliza certificados TLS/SSL gestionados automáticamente por cert-manager; el tráfico entre cliente e Ingress es HTTPS, y entre Ingress e Pods es HTTP interno.
+* **Exclusión de versiones de control**: Los archivos `.env` locales y configuraciones sensibles se excluyen mediante `.gitignore`; credenciales nunca se comitean al repositorio.
+* **Auditoría**: AWS CloudTrail registra todas las llamadas a la API de EKS; Kubernetes Audit logs capturan acceso a recursos dentro del clúster.
+* **Grupos de seguridad**: Los nodos EKS están dentro de un grupo de seguridad (`acme-cicor-prod-us-east-1-sg-eks-nodes-01`) que solo permite tráfico ingress desde el ELB en puertos 80/443 y SSH desde IPs administrativas autorizadas.
 
 ## 9. Criterios de éxito
-* Los seis módulos de CICOR se ejecutan como contenedores Docker independientes bajo una misma red de Docker Compose sin colisiones de puertos;
-* La comunicación entre el API de un módulo y su respectiva base de datos es funcional y los datos persisten exitosamente tras la eliminación y recreación del contenedor;
-* Las peticiones HTTP simuladas mediante Postman hacia el `cicor-apigateway-dev-01` son enrutadas correctamente a la API del módulo correspondiente;
-* Los contenedores backend son capaces de cargar y descargar un archivo de prueba en el bucket `acme-cicor-dev-us-east-1-s3-assets-01` utilizando permisos delegados por AWS IAM sin emplear credenciales estáticas en el código;
-* El grupo de seguridad `acme-cicor-dev-us-east-1-sg-app-01` bloquea cualquier intento de conexión externa directa a las APIs o bases de datos por SSH o TCP, permitiendo únicamente el tráfico proveniente del origen autorizado.
+* El clúster EKS (`acme-cicor-prod-us-east-1-eks-cluster-01`) está operativo con al menos 3 nodos de trabajo en estado `Ready`.
+* Los seis módulos del ERP se ejecutan como Deployments independientes en Namespaces segregados, cada uno con al menos 2 replicas funcionando.
+* Los Pods de las APIs son accesibles únicamente dentro del clúster a través de Services de tipo ClusterIP; no existe acceso directo desde internet.
+* El Ingress Controller acepta tráfico HTTPS desde internet y enruta correctamente hacia el frontend y las APIs según el hostname/path.
+* La comunicación entre cada Pod API y su correspondiente Pod de base de datos es funcional; los datos persisten tras la eliminación y recreación del Pod (respaldados por PVC).
+* Las peticiones HTTP simuladas mediante Postman hacia el Ingress (`cicor-prod.acme.com`) son enrutadas correctamente a la API del módulo correspondiente mediante reglas de Ingress basadas en path.
+* Los Pods de backend son capaces de cargar y descargar un archivo de prueba en el bucket `acme-cicor-prod-us-east-1-s3-assets-01` utilizando IAM Roles asignados a los nodos, sin emplear Access Keys estáticos.
+* Las Network Policies configuradas bloquean cualquier intento de comunicación no autorizada entre Pods de diferentes Namespaces, siendo únicamente el Ingress Controller quien puede acceder a las APIs.
+* Los Kubernetes Secrets (`cicor-db-credentials`, `cicor-jwt-secret`) están almacenados y encriptados; las variables de entorno no exponen credenciales en descripciones de Pods.
+* El escalado automático horizontal (HPA) está configurado para cada Deployment API, permitiendo que se incremente el número de replicas cuando la utilización de CPU supera el 70%.
+* Los volúmenes EBS asociados a los PersistentVolumes están configurados con snapshots automáticos diarios y con política de retención de 90 días en producción.
+* Los logs de todos los Pods se capturan en CloudWatch, permitiendo buscar errores y rastrear eventos del sistema.
