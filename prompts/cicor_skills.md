@@ -178,3 +178,34 @@ Debes responder exactamente con estas secciones, en este orden:
 
 ## Criterio de calidad esperado
 La salida debe servir como base para documentación ejecutiva y técnica del proyecto CICOR; lista para presentar a un cliente o usar como insumo inicial de diseño de arquitectura cloud.
+
+## Prácticas obligatorias para YAML, seguridad y observabilidad
+Cuando el LLM genere manifiestos Kubernetes o archivos YAML relacionados con CICOR, debe respetar estas reglas:
+
+- Todo recurso debe incluir `apiVersion`, `kind`, `metadata.name`, `metadata.namespace` cuando aplique, y etiquetas consistentes para trazabilidad;
+- Los nombres de recursos deben seguir la convención definida y permanecer en minúscula; no usar nombres genéricos o ambiguos;
+- Cada `Deployment` debe declarar `resources.requests` y `resources.limits`; no se aceptan Pods sin control de consumo;
+- Deben incluirse `readinessProbe` y `livenessProbe` en APIs, frontends y componentes de observabilidad cuando aplique;
+- Los contenedores deben ejecutarse con `securityContext` endurecido; usar `runAsNonRoot`, `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true` cuando sea compatible, y `capabilities.drop: ["ALL"]`;
+- Debe configurarse `seccompProfile` con modo `RuntimeDefault` o un perfil equivalente aprobado;
+- Los `ServiceAccount` deben ser explícitos y de mínimo privilegio; no reutilizar la cuenta por defecto sin justificación;
+- La exposición de red debe limitarse con `Service`, `Ingress` y `NetworkPolicy`; no abrir puertos innecesarios;
+- La configuración sensible debe ir en `Secret`; la configuración no sensible debe ir en `ConfigMap`;
+- No se deben incrustar credenciales, tokens, claves privadas ni certificados en texto plano dentro de manifests;
+- Los contenedores deben referenciar imágenes inmutables o, como mínimo, versiones fijadas; evitar `latest`;
+- En escenarios de observabilidad, los manifiestos deben contemplar `labels`, `annotations`, `ServiceMonitor` o recursos equivalentes cuando se use Prometheus;
+- En escenarios de trazabilidad, los Pods deben exponer logs estructurados en stdout/stderr y no depender de archivos locales para auditoría;
+- Para entornos con AWS, los recursos deben dejar listo el uso de `IAM Roles for Service Accounts` cuando el acceso a servicios administrados lo requiera;
+- Para contenedores que procesen datos sensibles, se debe contemplar el cifrado en tránsito, el aislamiento por Namespace y el control de acceso por RBAC;
+- Para control de postura en clúster, los manifiestos deben ser compatibles con controles de cumplimiento como AWS Config, escaneo de imágenes por CVE y validaciones de políticas;
+- Si el recurso requiere persistencia, debe definirse `PersistentVolumeClaim` y no depender de almacenamiento efímero;
+- Los ejemplos YAML deben ser limpios, coherentes y sin ruido innecesario; priorizar claridad, seguridad y operación.
+
+## Criterio para temas de monitoreo y seguridad
+Si la solicitud menciona observabilidad, diagnóstico, seguridad o cumplimiento, la respuesta debe priorizar:
+
+- Registros, métricas y trazas;
+- Supervisión de contenedores y clúster;
+- Seguridad de red, identidad y datos;
+- Controles de runtime y escaneo de vulnerabilidades;
+- Recomendaciones directamente aplicables en YAML y en la arquitectura de Kubernetes o AWS.
