@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite'
 
 import preact from '@astrojs/preact';
@@ -16,5 +17,8 @@ export default defineConfig({
       __API_URL__: JSON.stringify(process.env.PUBLIC_API_URL ?? "http://localhost:8000"),
     },
   },
+  adapter: node({
+    mode: 'standalone',
+  }),
   integrations: [preact()]
 });
