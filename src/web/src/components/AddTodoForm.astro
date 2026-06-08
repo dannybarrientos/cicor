@@ -1,0 +1,70 @@
+---
+const { moduleName } = Astro.props;
+
+import { api } from "../lib/api";
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const priority = formData.get("priority") as "low" | "medium" | "high";
+
+    await api.todos.create({
+      title,
+      description,
+      priority
+    });
+
+    Astro.redirect("/");
+  } catch (error) {
+    console.error("Error adding todo:", error);
+  }
+}
+---
+
+<details class="group">
+  <summary
+    class="cursor-pointer list-none p-4 rounded-2xl border border-zinc-700/50 bg-zinc-900/60"
+  >
+    Nueva tarea en {moduleName}
+  </summary>
+
+  <form
+    method="POST"
+    class="mt-3 space-y-3"
+  >
+    <input
+      name="title"
+      required
+      placeholder="Título"
+      class="w-full"
+    />
+
+    <textarea
+      name="description"
+      rows="2"
+      placeholder="Descripción"
+      class="w-full"
+    />
+
+    <select
+      name="priority"
+      class="w-full"
+    >
+      <option value="low">Baja</option>
+      <option value="medium" selected>
+        Media
+      </option>
+      <option value="high">Alta</option>
+    </select>
+
+    <button
+      type="submit"
+      data-submit-button
+      class="px-4 py-2 rounded-xl bg-[var(--color-primary)]"
+    >
+      Añadir tarea
+    </button>
+  </form>
+</details>

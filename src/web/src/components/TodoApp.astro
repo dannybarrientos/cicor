@@ -1,0 +1,128 @@
+---
+import TodoItem from "./TodoItem.astro";
+import AddTodoForm from "./AddTodoForm.astro";
+import StatsBar from "./StatsBar.astro";
+
+import { api } from "../lib/api";
+import { MODULE_NAME } from "../lib/config";
+
+const data = await api.todos.list();
+
+const todos = data.items;
+
+const stats = {
+  total: todos.length,
+  pending: todos.filter(t => !t.completed).length,
+  completed: todos.filter(t => t.completed).length
+};
+
+---
+
+<div class="min-h-screen flex flex-col">
+
+  <div class="relative z-10 flex-1 max-w-xl mx-auto w-full px-4 py-12">
+
+    <header class="mb-10">
+      <h1 class="font-display text-4xl font-bold text-zinc-50">
+        Tareas
+      </h1>
+
+      <p class="mt-1 text-zinc-500 text-sm">
+        {
+          new Date().toLocaleDateString(
+            "es-CO",
+            {
+              weekday: "long",
+              day: "numeric",
+              month: "long"
+            }
+          )
+        }
+      </p>
+    </header>
+
+    {
+      stats.total > 0 &&
+      <div class="mb-6">
+        <StatsBar {...stats} />
+      </div>
+    }
+
+    <div class="mb-6">
+      <AddTodoForm moduleName={MODULE_NAME} />
+    </div>
+
+    <div class="flex items-center gap-1 mb-6 p-1 bg-zinc-900/60 border border-zinc-800 rounded-xl">
+
+      <a
+        href="?filter=all"
+        data-filter-link="all"
+        class="flex-1 py-2 px-3 rounded-lg bg-zinc-800 text-zinc-100"
+      >
+        Todas
+      </a>
+
+      <a
+        href="?filter=pending"
+        data-filter-link="pending"
+        class="flex-1 py-2 px-3 rounded-lg text-zinc-500"
+      >
+        Pendientes
+      </a>
+
+      <a
+        href="?filter=completed"
+        data-filter-link="completed"
+        class="flex-1 py-2 px-3 rounded-lg text-zinc-500"
+      >
+        Completadas
+      </a>
+
+    </div>
+
+    <div class="space-y-3">
+      {
+        todos.map((todo, i) => (
+          <div
+            data-todo-item
+            data-completed={todo.completed ? "true" : "false"}
+          >
+            <TodoItem
+              todo={todo}
+              index={i}
+            />
+          </div>
+        ))
+      }
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  const setFilterState = () => {
+    const filter = new URLSearchParams(window.location.search).get("filter") ?? "all";
+
+    document.querySelectorAll("[data-todo-item]").forEach((item) => {
+      const completed = item.getAttribute("data-completed") === "true";
+      const shouldShow =
+        filter === "all" ||
+        (filter === "pending" && !completed) ||
+        (filter === "completed" && completed);
+
+      item.toggleAttribute("hidden", !shouldShow);
+    });
+
+    document.querySelectorAll("[data-filter-link]").forEach((link) => {
+      const isActive = link.getAttribute("data-filter-link") === filter;
+
+      link.className = isActive
+        ? "flex-1 py-2 px-3 rounded-lg bg-zinc-800 text-zinc-100"
+        : "flex-1 py-2 px-3 rounded-lg text-zinc-500";
+    });
+  };
+
+  setFilterState();
+
+  window.addEventListener("popstate", setFilterState);
+</script>
