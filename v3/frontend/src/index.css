@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Variables ──────────────────────────────────────── */
+:root {
+  --color-cicor-primary: #1E40AF;
+  --color-cicor-light:   #DBEAFE;
+  --color-cicor-dark:    #0C1E4D;
+
+  --color-commercial: #10B981;
+  --color-inventory:  #3B82F6;
+  --color-accounting: #EF4444;
+  --color-operations: #F97316;
+  --color-hr:         #A855F7;
+}
+
+/* ── Base ───────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Sora', sans-serif;
+  background-color: #F0F4FC;
+  color: #1A1A2E;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F0F4FC;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* ── Typography helpers ─────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: 'Lexend', sans-serif;
+}
+
+code, pre {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Utility classes ────────────────────────────────────── */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out both;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .shadow-module {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.12);
+  }
+
+  .shadow-card {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+  }
+}
+
+/* ── Keyframes ──────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── Table overrides ────────────────────────────────────── */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* ── Focus visible ──────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-cicor-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

@@ -1,0 +1,21 @@
+# ============================================================
+# CICOR ERP - Inventory API Dependencies
+# ============================================================
+
+# ── Framework web ─────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.30.1          # ASGI server con extras (websockets, httptools)
+
+# ── Base de datos ─────────────────────────────────────────────
+psycopg2-binary==2.9.9             # Driver PostgreSQL (binario, sin compilar)
+
+# ── Validación y schemas ──────────────────────────────────────
+pydantic==2.7.1
+pydantic-settings==2.2.1           # Configuración via variables de entorno
+
+# ── Observabilidad ────────────────────────────────────────────
+prometheus-fastapi-instrumentator==6.1.0   # Métricas /metrics automáticas
+
+# ── Utilidades ────────────────────────────────────────────────
+python-dotenv==1.0.1               # Carga .env en desarrollo local
+python-json-logger==2.0.7          # Logs en formato JSON estructurado

@@ -1,0 +1,25 @@
+# ============================================================
+# CICOR ERP - HR API - Dependencias Python
+# ============================================================
+
+# Framework
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+
+# Base de datos
+psycopg2-binary==2.9.9
+
+# Validación de datos
+pydantic==2.6.1
+
+# Validación de email (nativa en Pydantic v2 con email-validator)
+email-validator==2.1.0
+
+# Observabilidad
+prometheus-fastapi-instrumentator==6.1.0
+
+# Logging JSON estructurado
+python-json-logger==2.0.7
+
+# Utilidades
+python-dotenv==1.0.1
