@@ -1,0 +1,25 @@
+# ============================================================
+# CICOR ERP - Commercial API Dependencies
+# ============================================================
+
+# ── Framework web ─────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.30.1          # ASGI server con extras (websockets, httptools)
+
+# ── Base de datos ─────────────────────────────────────────────
+psycopg2-binary==2.9.9             # Driver PostgreSQL (binario, sin compilar)
+# Alternativa async: asyncpg==0.29.0 (si se migra a async DB calls)
+
+# ── Validación y schemas ──────────────────────────────────────
+pydantic==2.7.1                    # Validación de modelos (incluido en FastAPI)
+pydantic-settings==2.2.1           # Configuración via variables de entorno
+
+# ── HTTP client (para llamar a Inventario: POST /reserve) ─────
+httpx==0.27.0                      # Cliente HTTP async compatible con FastAPI
+
+# ── Observabilidad ────────────────────────────────────────────
+prometheus-fastapi-instrumentator==6.1.0   # Métricas /metrics automáticas
+
+# ── Utilidades ────────────────────────────────────────────────
+python-dotenv==1.0.1               # Carga .env en desarrollo local
+python-json-logger==2.0.7          # Logs en formato JSON estructurado

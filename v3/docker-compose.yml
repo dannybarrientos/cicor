@@ -1,0 +1,382 @@
+# ════════════════════════════════════════════════════════════
+# CICOR ERP - Docker Compose Local (SIMPLIFICADO)
+# 
+# Uso:
+#   docker-compose up -d          (Levantar todo)
+#   docker-compose logs -f         (Ver logs)
+#   docker-compose down -v         (Detener y limpiar)
+# ════════════════════════════════════════════════════════════
+
+services:
+
+  # ─────────────────────────────────────────────────────────
+  # FRONTEND (React + Vite)
+  # ─────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost
+    container_name: cicor-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      VITE_API_BASE_URL: http://localhost
+    networks:
+      - cicor-network
+    healthcheck:
+      # # #test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      # # #test: ["CMD", "curl", "-f", "http://localhost:3000 || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3000 || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 6
+      start_period: 90s
+
+  # ─────────────────────────────────────────────────────────
+  # NGINX (Reverse Proxy)
+  # ─────────────────────────────────────────────────────────
+  # # #nginx:
+  # # #  image: nginx:1.25-alpine
+  # # #  container_name: cicor-nginx
+  # # #  restart: unless-stopped
+  # # #  ports:
+  # # #    - "80:80"
+  # # #  volumes:
+  # # #    - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+  # # #  depends_on:
+  # # #    - frontend
+  # # #    - commercial-api
+  # # #    - inventory-api
+  # # #    - accounting-api
+  # # #    - operations-api
+  # # #    - hr-api
+  # # #  networks:
+  # # #    - cicor-network
+  # # #  healthcheck:
+  # # #    # # #test: ["CMD", "wget", "-q", "--spider", "http://localhost"]
+  # # #    test: ["CMD", "curl", "-f", "http://localhost || exit 1"]
+  # # #    interval: 30s
+  # # #    timeout: 10s
+  # # #    retries: 3
+  # # #    start_period: 20s
+
+  nginx:
+    build:                           # ✅ CAMBIO: build en lugar de image
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: cicor-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    # ✅ ELIMINAR volume - ahora está en la imagen
+    depends_on:
+      frontend:
+        condition: service_healthy   # ✅ ESPERAR a que frontend esté healthy
+      commercial-api:
+        condition: service_healthy
+      inventory-api:
+        condition: service_healthy
+      accounting-api:
+        condition: service_healthy
+      operations-api:
+        condition: service_healthy
+      hr-api:
+        condition: service_healthy
+    networks:
+      - cicor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s             # ✅ Esperar más tiempo
+
+  # ─────────────────────────────────────────────────────────
+  # MÓDULO COMERCIAL
+  # ─────────────────────────────────────────────────────────
+  commercial-api:
+    build:
+      context: ./apis/commercial-api
+      dockerfile: Dockerfile
+    container_name: cicor-commercial-api
+    restart: unless-stopped
+    ports:
+      - "${COMMERCIAL_API_PORT:-8001}:8000"
+    environment:
+      POSTGRES_HOST: commercial-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${COMMERCIAL_DB_USER}
+      POSTGRES_PASSWORD: ${COMMERCIAL_DB_PASSWORD}
+      POSTGRES_DB: ${COMMERCIAL_DB_NAME}
+      INVENTORY_API_URL: http://inventory-api:8000
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      commercial-db:
+        condition: service_healthy
+    networks:
+      - cicor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  commercial-db:
+    image: postgres:15-alpine
+    container_name: cicor-commercial-db
+    restart: unless-stopped
+    ports:
+      - "${COMMERCIAL_DB_PORT_HOST:-5431}:5432"
+    environment:
+      POSTGRES_USER: ${COMMERCIAL_DB_USER}
+      POSTGRES_PASSWORD: ${COMMERCIAL_DB_PASSWORD}
+      POSTGRES_DB: ${COMMERCIAL_DB_NAME}
+    volumes:
+      - ./databases/commercial/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - cicor-commercial-data:/var/lib/postgresql/data
+    networks:
+      - cicor-network
+    healthcheck:
+      # # #test: ["CMD-SHELL", "pg_isready -U ${COMMERCIAL_DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${COMMERCIAL_DB_USER} -d ${COMMERCIAL_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─────────────────────────────────────────────────────────
+  # MÓDULO INVENTARIO
+  # ─────────────────────────────────────────────────────────
+  inventory-api:
+    build:
+      context: ./apis/inventory-api
+      dockerfile: Dockerfile
+    container_name: cicor-inventory-api
+    restart: unless-stopped
+    ports:
+      - "${INVENTORY_API_PORT:-8002}:8000"
+    environment:
+      POSTGRES_HOST: inventory-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${INVENTORY_DB_USER}
+      POSTGRES_PASSWORD: ${INVENTORY_DB_PASSWORD}
+      POSTGRES_DB: ${INVENTORY_DB_NAME}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+    networks:
+      - cicor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  inventory-db:
+    image: postgres:15-alpine
+    container_name: cicor-inventory-db
+    restart: unless-stopped
+    ports:
+      - "${INVENTORY_DB_PORT_HOST:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${INVENTORY_DB_USER}
+      POSTGRES_PASSWORD: ${INVENTORY_DB_PASSWORD}
+      POSTGRES_DB: ${INVENTORY_DB_NAME}
+    volumes:
+      - ./databases/inventory/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - cicor-inventory-data:/var/lib/postgresql/data
+    networks:
+      - cicor-network
+    healthcheck:
+      # # #test: ["CMD-SHELL", "pg_isready -U ${INVENTORY_DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${INVENTORY_DB_USER} -d ${INVENTORY_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─────────────────────────────────────────────────────────
+  # MÓDULO CONTABILIDAD
+  # ─────────────────────────────────────────────────────────
+  accounting-api:
+    build:
+      context: ./apis/accounting-api
+      dockerfile: Dockerfile
+    container_name: cicor-accounting-api
+    restart: unless-stopped
+    ports:
+      - "${ACCOUNTING_API_PORT:-8003}:8000"
+    environment:
+      POSTGRES_HOST: accounting-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${ACCOUNTING_DB_USER}
+      POSTGRES_PASSWORD: ${ACCOUNTING_DB_PASSWORD}
+      POSTGRES_DB: ${ACCOUNTING_DB_NAME}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      accounting-db:
+        condition: service_healthy
+    networks:
+      - cicor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  accounting-db:
+    image: postgres:15-alpine
+    container_name: cicor-accounting-db
+    restart: unless-stopped
+    ports:
+      - "${ACCOUNTING_DB_PORT_HOST:-5433}:5432"
+    environment:
+      POSTGRES_USER: ${ACCOUNTING_DB_USER}
+      POSTGRES_PASSWORD: ${ACCOUNTING_DB_PASSWORD}
+      POSTGRES_DB: ${ACCOUNTING_DB_NAME}
+    volumes:
+      - ./databases/accounting/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - cicor-accounting-data:/var/lib/postgresql/data
+    networks:
+      - cicor-network
+    healthcheck:
+      # # #test: ["CMD-SHELL", "pg_isready -U ${ACCOUNTING_DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${ACCOUNTING_DB_USER} -d ${ACCOUNTING_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─────────────────────────────────────────────────────────
+  # MÓDULO OPERACIONES
+  # ─────────────────────────────────────────────────────────
+  operations-api:
+    build:
+      context: ./apis/operations-api
+      dockerfile: Dockerfile
+    container_name: cicor-operations-api
+    restart: unless-stopped
+    ports:
+      - "${OPERATIONS_API_PORT:-8004}:8000"
+    environment:
+      POSTGRES_HOST: operations-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${OPERATIONS_DB_USER}
+      POSTGRES_PASSWORD: ${OPERATIONS_DB_PASSWORD}
+      POSTGRES_DB: ${OPERATIONS_DB_NAME}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      operations-db:
+        condition: service_healthy
+    networks:
+      - cicor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  operations-db:
+    image: postgres:15-alpine
+    container_name: cicor-operations-db
+    restart: unless-stopped
+    ports:
+      - "${OPERATIONS_DB_PORT_HOST:-5434}:5432"
+    environment:
+      POSTGRES_USER: ${OPERATIONS_DB_USER}
+      POSTGRES_PASSWORD: ${OPERATIONS_DB_PASSWORD}
+      POSTGRES_DB: ${OPERATIONS_DB_NAME}
+    volumes:
+      - ./databases/operations/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - cicor-operations-data:/var/lib/postgresql/data
+    networks:
+      - cicor-network
+    healthcheck:
+      # # #test: ["CMD-SHELL", "pg_isready -U ${OPERATIONS_DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${OPERATIONS_DB_USER} -d ${OPERATIONS_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─────────────────────────────────────────────────────────
+  # MÓDULO RECURSOS HUMANOS
+  # ─────────────────────────────────────────────────────────
+  hr-api:
+    build:
+      context: ./apis/hr-api
+      dockerfile: Dockerfile
+    container_name: cicor-hr-api
+    restart: unless-stopped
+    ports:
+      - "${HR_API_PORT:-8005}:8000"
+    environment:
+      POSTGRES_HOST: hr-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${HR_DB_USER}
+      POSTGRES_PASSWORD: ${HR_DB_PASSWORD}
+      POSTGRES_DB: ${HR_DB_NAME}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      hr-db:
+        condition: service_healthy
+    networks:
+      - cicor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  hr-db:
+    # # #image: postgres:15-alpine
+    build:                              # ← CAMBIO: build en lugar de image
+      context: ./databases/hr           #
+      dockerfile: Dockerfile            #
+    container_name: cicor-hr-db
+    restart: unless-stopped
+    ports:
+      - "${HR_DB_PORT_HOST:-5435}:5432"
+    environment:
+      POSTGRES_USER: ${HR_DB_USER}
+      POSTGRES_PASSWORD: ${HR_DB_PASSWORD}
+      POSTGRES_DB: ${HR_DB_NAME}
+    volumes:
+      - ./databases/hr/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - cicor-hr-data:/var/lib/postgresql/data
+    networks:
+      - cicor-network
+    healthcheck:
+      # # #test: ["CMD-SHELL", "pg_isready -U ${HR_DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${HR_DB_USER} -d ${HR_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# ════════════════════════════════════════════════════════════
+# VOLÚMENES (Persistencia de datos)
+# ════════════════════════════════════════════════════════════
+volumes:
+  cicor-commercial-data:
+  cicor-inventory-data:
+  cicor-accounting-data:
+  cicor-operations-data:
+  cicor-hr-data:
+
+# ════════════════════════════════════════════════════════════
+# RED (Conecta todos los servicios)
+# ════════════════════════════════════════════════════════════
+networks:
+  cicor-network:
+    name: cicor-network
+    driver: bridge
