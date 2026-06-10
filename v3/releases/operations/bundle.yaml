@@ -1,0 +1,261 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cicor-operations
+  labels:
+    app.kubernetes.io/name: cicor-operations
+    app.kubernetes.io/part-of: cicor
+    app.kubernetes.io/component: operations
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cicor-operations-config
+  namespace: cicor-operations
+data:
+  APP_ENVIRONMENT: local
+  MODULE_NAME: operations
+  MODULE_TITLE: CICOR Operaciones
+  API_BASE_PATH: /api/operations
+  API_PUBLIC_BASE_URL: http://cicor.local/api/operations
+  POSTGRES_HOST: cicor-operations-db-svc
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: cicor_operations_db
+  PGDATA: /var/lib/postgresql/data/pgdata
+  LOG_LEVEL: INFO
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cicor-operations-secret
+  namespace: cicor-operations
+type: Opaque
+stringData:
+  POSTGRES_USER: cicor_user
+  POSTGRES_PASSWORD: cicor_pass
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cicor-operations-db-pvc
+  namespace: cicor-operations
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cicor-operations-db
+  namespace: cicor-operations
+  labels:
+    app.kubernetes.io/name: cicor-operations-db
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: cicor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cicor-operations-db
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cicor-operations-db
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: cicor
+    spec:
+      securityContext:
+        fsGroup: 999
+      containers:
+        - name: database
+          image: cicor-operations-db:v3-local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - configMapRef:
+                name: cicor-operations-config
+            - secretRef:
+                name: cicor-operations-secret
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: cicor-operations-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cicor-operations-db-svc
+  namespace: cicor-operations
+  labels:
+    app.kubernetes.io/name: cicor-operations-db
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: cicor
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: cicor-operations-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cicor-operations-api
+  namespace: cicor-operations
+  labels:
+    app.kubernetes.io/name: cicor-operations-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: cicor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cicor-operations-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cicor-operations-api
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: cicor
+    spec:
+      containers:
+        - name: api
+          image: cicor-operations-api:v3-local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cicor-operations-config
+            - secretRef:
+                name: cicor-operations-secret
+          env:
+            - name: PORT
+              value: "8000"
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cicor-operations-api-svc
+  namespace: cicor-operations
+  labels:
+    app.kubernetes.io/name: cicor-operations-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: cicor
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: cicor-operations-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cicor-operations-ingress
+  namespace: cicor-operations
+  labels:
+    app.kubernetes.io/name: cicor-operations-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: cicor
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cicor.local
+      http:
+        paths:
+          - path: /api/operations
+            pathType: Prefix
+            backend:
+              service:
+                name: cicor-operations-api-svc
+                port:
+                  number: 80

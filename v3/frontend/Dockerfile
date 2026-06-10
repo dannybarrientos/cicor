@@ -18,7 +18,7 @@ FROM nginx:alpine
 RUN apk add --no-cache curl
 
 # Run as non-root
-# # #RUN addgroup -S cicor && adduser -S cicor -G cicor
+RUN addgroup -g 1000 cicor && adduser -u 1000 -S cicor -G cicor
 
 # ✅ ELIMINAR default.conf de la imagen base para evitar conflictos
 RUN rm -f /etc/nginx/conf.d/default.conf
@@ -29,13 +29,14 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # ✅ COPIAR archivos estáticos
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# # #RUN chown -R cicor:cicor /usr/share/nginx/html \
-# # #    && chown -R cicor:cicor /var/cache/nginx \
-# # #    && chown -R cicor:cicor /var/log/nginx \
-# # #    && touch /var/run/nginx.pid \
-# # #    && chown -R cicor:cicor /var/run/nginx.pid
+RUN chown -R cicor:cicor /usr/share/nginx/html \
+    && chown -R cicor:cicor /var/cache/nginx \
+    && chown -R cicor:cicor /var/log/nginx \
+    && chown -R cicor:cicor /etc/nginx/conf.d \
+    && touch /var/run/nginx.pid \
+    && chown -R cicor:cicor /var/run/nginx.pid
 
-# # #USER cicor
+USER cicor
 # ✅ DAR PERMISOS
 RUN chmod -R 755 /usr/share/nginx/html
 
