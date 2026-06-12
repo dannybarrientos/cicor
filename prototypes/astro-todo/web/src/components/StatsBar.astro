@@ -1,0 +1,31 @@
+---
+const {
+  total,
+  pending,
+  completed
+} = Astro.props;
+
+const pct =
+  total > 0
+    ? Math.round(
+        completed / total * 100
+      )
+    : 0;
+---
+
+<div class="space-y-3">
+
+  <div class="flex justify-between text-xs text-zinc-500">
+    <span>{pending} pendientes</span>
+    <span>{pct}% completado</span>
+    <span>{completed} listas</span>
+  </div>
+
+  <div class="h-1 bg-zinc-800 rounded-full overflow-hidden">
+    <div
+      class="h-full rounded-full"
+      style={`width:${pct}%;background:var(--color-primary)`}
+    />
+  </div>
+
+</div>
