@@ -1,13 +1,16 @@
 """Smoke tests for Sales CRUD endpoints of the Commercial API."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 
 class TestListSales:
     """GET /api/commercial/sales — List all sales."""
 
     def test_returns_empty_list(self, client):
-        from conftest import FakeCursor, fake_db_context
+        from conftest import FakeCursor
+        from conftest import fake_db_context
 
         fake_cursor = FakeCursor(rows=[])
 
@@ -18,7 +21,8 @@ class TestListSales:
         assert response.json() == []
 
     def test_returns_single_sale(self, client, fake_sale_row):
-        from conftest import FakeCursor, fake_db_context
+        from conftest import FakeCursor
+        from conftest import fake_db_context
 
         fake_cursor = FakeCursor(rows=[fake_sale_row])
 
@@ -37,7 +41,8 @@ class TestCreateSale:
     """POST /api/commercial/sales — Create a new sale."""
 
     def test_creates_sale_with_inventory_ok(self, client, fake_sale_row):
-        from conftest import FakeCursor, fake_db_context
+        from conftest import FakeCursor
+        from conftest import fake_db_context
 
         fake_cursor = FakeCursor(rows=[fake_sale_row])
 
@@ -72,7 +77,8 @@ class TestCreateSale:
         assert data["quantity"] == 5
 
     def test_creates_sale_when_inventory_fails(self, client, fake_sale_row):
-        from conftest import FakeCursor, fake_db_context
+        from conftest import FakeCursor
+        from conftest import fake_db_context
 
         fake_cursor = FakeCursor(rows=[fake_sale_row])
 
@@ -119,7 +125,8 @@ class TestDeleteSale:
     """DELETE /api/commercial/sales/{id} — Delete a sale."""
 
     def test_deletes_existing_sale(self, client, fake_sale_row):
-        from conftest import FakeCursor, fake_db_context
+        from conftest import FakeCursor
+        from conftest import fake_db_context
 
         fake_cursor = FakeCursor(rows=[fake_sale_row])
 
@@ -129,7 +136,8 @@ class TestDeleteSale:
         assert response.status_code == 204
 
     def test_returns_404_when_not_found(self, client):
-        from conftest import FakeCursor, fake_db_context
+        from conftest import FakeCursor
+        from conftest import fake_db_context
 
         fake_cursor = FakeCursor(rows=[])
 

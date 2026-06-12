@@ -16,20 +16,22 @@ Endpoints activos:
   DELETE /api/operations/processes/{id} → Eliminar proceso
 """
 
-import os
 import logging
-from datetime import datetime
-from typing import List
+import os
 from contextlib import asynccontextmanager
+from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, status
+from database import check_db_connection
+from database import get_db
+from fastapi import FastAPI
+from fastapi import HTTPException
+from fastapi import status
 from fastapi.middleware.cors import CORSMiddleware
+from models import ProcessCreate
+from models import ProcessStatus
+from models import ProcessUpdate
 from prometheus_fastapi_instrumentator import Instrumentator
 from pythonjsonlogger import jsonlogger
-
-from database import get_db, check_db_connection
-from models import ProcessCreate, ProcessUpdate, ProcessStatus
-
 
 # ── Logging JSON estructurado ──────────────────────────────────────────────────
 _log_handler = logging.StreamHandler()
@@ -178,7 +180,7 @@ async def module_info():
 
 @app.get(
     "/api/operations/processes",
-    response_model=List[dict],
+    response_model=list[dict],
     tags=["processes"],
     summary="Listar todos los procesos",
 )

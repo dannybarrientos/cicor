@@ -5,15 +5,16 @@ Schemas Pydantic para validación de datos del módulo Operaciones.
 Entidad principal: Process (Procesos Operacionales)
 """
 
-from pydantic import BaseModel, Field, model_validator
-from typing import Optional
 from datetime import date
-from enum import Enum
+from enum import StrEnum
 
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import model_validator
 
 # ── Enumerados ────────────────────────────────────────────────────────────────
 
-class ProcessStatus(str, Enum):
+class ProcessStatus(StrEnum):
     PLANNING    = "PLANNING"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED   = "COMPLETED"
@@ -32,11 +33,11 @@ class ProcessCreate(BaseModel):
         description="Nombre del proceso",
         examples=["Cadena de Suministro Q1"],
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="Descripción detallada del proceso",
     )
-    owner: Optional[str] = Field(
+    owner: str | None = Field(
         None,
         max_length=255,
         description="Responsable del proceso",
@@ -46,7 +47,7 @@ class ProcessCreate(BaseModel):
         ...,
         description="Fecha de inicio del proceso (YYYY-MM-DD)",
     )
-    expected_end_date: Optional[date] = Field(
+    expected_end_date: date | None = Field(
         None,
         description="Fecha esperada de finalización (YYYY-MM-DD)",
     )
@@ -64,34 +65,34 @@ class ProcessCreate(BaseModel):
 class ProcessUpdate(BaseModel):
     """Schema para actualizar un proceso existente (todos los campos opcionales)."""
 
-    process_name: Optional[str] = Field(
+    process_name: str | None = Field(
         None,
         min_length=1,
         max_length=255,
         description="Nuevo nombre del proceso",
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="Nueva descripción",
     )
-    owner: Optional[str] = Field(
+    owner: str | None = Field(
         None,
         max_length=255,
         description="Nuevo responsable",
     )
-    status: Optional[ProcessStatus] = Field(
+    status: ProcessStatus | None = Field(
         None,
         description="Nuevo estado del proceso",
     )
-    start_date: Optional[date] = Field(
+    start_date: date | None = Field(
         None,
         description="Nueva fecha de inicio",
     )
-    expected_end_date: Optional[date] = Field(
+    expected_end_date: date | None = Field(
         None,
         description="Nueva fecha esperada de finalización",
     )
-    actual_end_date: Optional[date] = Field(
+    actual_end_date: date | None = Field(
         None,
         description="Fecha real de finalización (solo cuando status=COMPLETED)",
     )
@@ -113,12 +114,12 @@ class ProcessResponse(BaseModel):
 
     id: int
     process_name: str
-    description: Optional[str]
-    owner: Optional[str]
+    description: str | None
+    owner: str | None
     status: str
     start_date: date
-    expected_end_date: Optional[date]
-    actual_end_date: Optional[date]
+    expected_end_date: date | None
+    actual_end_date: date | None
 
     class Config:
         from_attributes = True

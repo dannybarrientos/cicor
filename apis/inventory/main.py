@@ -11,23 +11,25 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Path, status
+from database import DatabasePool
+from database import check_db_health
+from database import get_db_cursor
+from fastapi import FastAPI
+from fastapi import HTTPException
+from fastapi import Path
+from fastapi import status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from models import ErrorResponse
+from models import HealthResponse
+from models import InfoResponse
+from models import ProductCreate
+from models import ProductResponse
+from models import ProductUpdate
+from models import ReserveRequest
+from models import ReserveResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from pythonjsonlogger import jsonlogger
-
-from database import DatabasePool, check_db_health, get_db_cursor
-from models import (
-    ErrorResponse,
-    HealthResponse,
-    InfoResponse,
-    ProductCreate,
-    ProductResponse,
-    ProductUpdate,
-    ReserveRequest,
-    ReserveResponse,
-)
 
 # ── Logging JSON estructurado ─────────────────────────────────
 log_handler = logging.StreamHandler()
@@ -233,7 +235,7 @@ def update_product(
         if "unique" in str(exc).lower() or "duplicate" in str(exc).lower():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"El SKU ya pertenece a otro producto",
+                detail="El SKU ya pertenece a otro producto",
             )
         raise
 

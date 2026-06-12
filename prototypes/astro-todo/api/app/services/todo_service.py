@@ -1,11 +1,13 @@
 import uuid
-from typing import Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.todo import Todo
-from app.schemas.todo import TodoCreate, TodoListResponse, TodoResponse, TodoUpdate
+from app.schemas.todo import TodoCreate
+from app.schemas.todo import TodoListResponse
+from app.schemas.todo import TodoResponse
+from app.schemas.todo import TodoUpdate
 
 
 class TodoService:
@@ -24,7 +26,7 @@ class TodoService:
             completed=completed,
         )
 
-    async def get_todo(self, todo_id: uuid.UUID) -> Optional[Todo]:
+    async def get_todo(self, todo_id: uuid.UUID) -> Todo | None:
         result = await self.db.execute(select(Todo).where(Todo.id == todo_id))
         return result.scalar_one_or_none()
 
@@ -35,7 +37,7 @@ class TodoService:
         await self.db.refresh(todo)
         return TodoResponse.model_validate(todo)
 
-    async def update_todo(self, todo_id: uuid.UUID, payload: TodoUpdate) -> Optional[TodoResponse]:
+    async def update_todo(self, todo_id: uuid.UUID, payload: TodoUpdate) -> TodoResponse | None:
         todo = await self.get_todo(todo_id)
         if not todo:
             return None
@@ -52,7 +54,7 @@ class TodoService:
         await self.db.delete(todo)
         return True
 
-    async def toggle_todo(self, todo_id: uuid.UUID) -> Optional[TodoResponse]:
+    async def toggle_todo(self, todo_id: uuid.UUID) -> TodoResponse | None:
         todo = await self.get_todo(todo_id)
         if not todo:
             return None

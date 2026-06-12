@@ -22,20 +22,23 @@ CRUD deshabilitado (futuro):
   - Gestionar Permisos
 """
 
-import os
 import logging
-from datetime import datetime
-from typing import List
+import os
 from contextlib import asynccontextmanager
+from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Query, status
+from database import check_db_connection
+from database import get_db
+from fastapi import FastAPI
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import status
 from fastapi.middleware.cors import CORSMiddleware
+from models import EmployeeCreate
+from models import EmployeeStatus
+from models import EmployeeUpdate
 from prometheus_fastapi_instrumentator import Instrumentator
 from pythonjsonlogger import jsonlogger
-
-from database import get_db, check_db_connection
-from models import EmployeeCreate, EmployeeUpdate, EmployeeStatus
-
 
 # ── Logging JSON estructurado ──────────────────────────────────────────────────
 _log_handler = logging.StreamHandler()
@@ -188,7 +191,7 @@ async def module_info():
 
 @app.get(
     "/api/hr/employees",
-    response_model=List[dict],
+    response_model=list[dict],
     tags=["employees"],
     summary="Listar empleados",
     description="Retorna todos los empleados. Se puede filtrar por departamento o estado.",
@@ -358,7 +361,7 @@ async def update_employee(employee_id: int, employee: EmployeeUpdate):
                 if "unique" in str(exc).lower() or "duplicate" in str(exc).lower():
                     raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
-                        detail=f"El email ya está en uso por otro empleado",
+                        detail="El email ya está en uso por otro empleado",
                     )
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

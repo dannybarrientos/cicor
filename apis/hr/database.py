@@ -3,11 +3,12 @@ CICOR ERP - HR API (Recursos Humanos)
 Módulo de conexión a PostgreSQL usando pool de conexiones psycopg2.
 """
 
-import os
 import logging
+import os
+from contextlib import contextmanager
+
 import psycopg2
 import psycopg2.pool
-from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ def get_pool() -> psycopg2.pool.SimpleConnectionPool:
                 "ERROR: Variable de entorno 'POSTGRES_DB' no definida. "
                 "Asegúrate de que está en tu docker-compose.yml o .env"
             )
-        
+
         _pool = psycopg2.pool.SimpleConnectionPool(
             minconn=1,
             maxconn=10,

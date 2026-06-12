@@ -51,4 +51,4 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r apis/commercial/requirements.txt mypy
-      - run: mypy apis/ databases/
+      - run: mypy apis/

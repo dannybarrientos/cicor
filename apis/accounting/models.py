@@ -7,16 +7,18 @@
 #              nunca ninguno) — replica el CHECK constraint de la BD.
 # ============================================================
 
-from datetime import date, datetime
+from datetime import date
+from datetime import datetime
 from decimal import Decimal
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import model_validator
 
 
 # ── Enumeraciones ─────────────────────────────────────────────
-class EntryStatus(str, Enum):
+class EntryStatus(StrEnum):
     """Estados del asiento contable (RF3)."""
     DRAFT = "DRAFT"           # Borrador, aún editable
     POSTED = "POSTED"         # Publicado, contabilizado en el período
@@ -47,21 +49,21 @@ class EntryCreate(BaseModel):
         description="Nombre de la cuenta contable",
         examples=["Caja y Bancos"],
     )
-    debit: Optional[Decimal] = Field(
+    debit: Decimal | None = Field(
         None,
         gt=0,
         # # #decimal_places=2,
         description="Monto al débito. Exclusivo con 'credit'.",
         examples=[1500.00],
     )
-    credit: Optional[Decimal] = Field(
+    credit: Decimal | None = Field(
         None,
         gt=0,
         # # #decimal_places=2,
         description="Monto al crédito. Exclusivo con 'debit'.",
         examples=[None],
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="Descripción o concepto del asiento",
         examples=["Cobro de factura #001 al cliente Acme Corp"],
@@ -97,15 +99,15 @@ class EntryUpdate(BaseModel):
     Todos los campos son opcionales, pero si se envían debit/credit
     se mantiene la restricción XOR."""
 
-    account_code: Optional[str] = Field(None, min_length=1, max_length=50)
-    account_name: Optional[str] = Field(None, min_length=1, max_length=255)
+    account_code: str | None = Field(None, min_length=1, max_length=50)
+    account_name: str | None = Field(None, min_length=1, max_length=255)
     # # #debit: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
-    debit: Optional[Decimal] = Field(None, gt=0)
-    credit: Optional[Decimal] = Field(None, gt=0)
+    debit: Decimal | None = Field(None, gt=0)
+    credit: Decimal | None = Field(None, gt=0)
     # # #credit: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
-    description: Optional[str] = None
-    entry_date: Optional[date] = None
-    status: Optional[EntryStatus] = None
+    description: str | None = None
+    entry_date: date | None = None
+    status: EntryStatus | None = None
 
     @model_validator(mode="after")
     def validate_update_constraints(self) -> "EntryUpdate":
@@ -129,9 +131,9 @@ class EntryResponse(BaseModel):
     id: int
     account_code: str
     account_name: str
-    debit: Optional[Decimal]
-    credit: Optional[Decimal]
-    description: Optional[str]
+    debit: Decimal | None
+    credit: Decimal | None
+    description: str | None
     entry_date: date
     status: EntryStatus
     created_at: datetime
@@ -144,7 +146,7 @@ class EntryResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     service: str = "cicor-accounting-api"
-    db_connected: Optional[bool] = None
+    db_connected: bool | None = None
 
 
 class InfoResponse(BaseModel):

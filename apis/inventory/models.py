@@ -8,9 +8,10 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import model_validator
 
 
 # ── Schema de entrada: Crear producto ────────────────────────
@@ -30,12 +31,12 @@ class ProductCreate(BaseModel):
         description="Código único de producto (SKU)",
         examples=["LAP-DELL-XPS15-001"],
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="Descripción detallada del producto",
         examples=["Laptop de alto rendimiento con procesador Intel Core i9"],
     )
-    category: Optional[str] = Field(
+    category: str | None = Field(
         None,
         max_length=100,
         examples=["Electrónica"],
@@ -66,14 +67,14 @@ class ProductUpdate(BaseModel):
     """Payload para PUT /api/inventory/products/{id}.
     Todos los campos son opcionales (actualización parcial)."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    sku: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = None
-    category: Optional[str] = Field(None, max_length=100)
-    stock_quantity: Optional[int] = Field(None, ge=0)
-    reorder_level: Optional[int] = Field(None, ge=0)
+    name: str | None = Field(None, min_length=1, max_length=255)
+    sku: str | None = Field(None, min_length=1, max_length=100)
+    description: str | None = None
+    category: str | None = Field(None, max_length=100)
+    stock_quantity: int | None = Field(None, ge=0)
+    reorder_level: int | None = Field(None, ge=0)
     # # #unit_price: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
-    unit_price: Optional[Decimal] = Field(None, gt=0)
+    unit_price: Decimal | None = Field(None, gt=0)
 
     @model_validator(mode="after")
     def at_least_one_field(self) -> "ProductUpdate":
@@ -91,8 +92,8 @@ class ProductResponse(BaseModel):
     id: int
     name: str
     sku: str
-    description: Optional[str]
-    category: Optional[str]
+    description: str | None
+    category: str | None
     stock_quantity: int
     reorder_level: int
     unit_price: Decimal
@@ -145,7 +146,7 @@ class HealthResponse(BaseModel):
 
     status: str
     service: str = "cicor-inventory-api"
-    db_connected: Optional[bool] = None
+    db_connected: bool | None = None
 
 
 class InfoResponse(BaseModel):

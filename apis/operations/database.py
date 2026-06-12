@@ -3,11 +3,12 @@ CICOR ERP - Operations API
 Módulo de conexión a PostgreSQL usando pool de conexiones psycopg2.
 """
 
-import os
 import logging
+import os
+from contextlib import contextmanager
+
 import psycopg2
 import psycopg2.pool
-from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 from functools import lru_cache
-from typing import List
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://cicor:cicor@localhost:5432/cicor"
 
     # CORS
-    cors_origins: List[str] = ["http://localhost:4321", "http://localhost:3000"]
+    cors_origins: list[str] = ["http://localhost:4321", "http://localhost:3000"]
 
     # Server
     api_host: str = "0.0.0.0"

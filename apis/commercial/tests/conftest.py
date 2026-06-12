@@ -3,7 +3,7 @@ import sys
 from contextlib import contextmanager
 from dataclasses import dataclass
 from types import ModuleType
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient

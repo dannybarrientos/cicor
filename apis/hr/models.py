@@ -11,15 +11,17 @@ Estados posibles:
 """
 
 import re
-from pydantic import BaseModel, Field, EmailStr, field_validator, model_validator
-from typing import Optional
 from datetime import date
-from enum import Enum
+from enum import StrEnum
 
+from pydantic import BaseModel
+from pydantic import EmailStr
+from pydantic import Field
+from pydantic import field_validator
 
 # ── Enumerados ────────────────────────────────────────────────────────────────
 
-class EmployeeStatus(str, Enum):
+class EmployeeStatus(StrEnum):
     ACTIVE   = "ACTIVE"
     INACTIVE = "INACTIVE"
     ON_LEAVE = "ON_LEAVE"
@@ -42,19 +44,19 @@ class EmployeeCreate(BaseModel):
         description="Correo electrónico corporativo (debe ser único)",
         examples=["jane.smith@cicor.com"],
     )
-    phone: Optional[str] = Field(
+    phone: str | None = Field(
         None,
         max_length=20,
         description="Número de teléfono (formato libre)",
         examples=["+573001234567"],
     )
-    position: Optional[str] = Field(
+    position: str | None = Field(
         None,
         max_length=255,
         description="Cargo o título del empleado",
         examples=["Senior Developer"],
     )
-    department: Optional[str] = Field(
+    department: str | None = Field(
         None,
         max_length=255,
         description="Área o departamento",
@@ -64,7 +66,7 @@ class EmployeeCreate(BaseModel):
         ...,
         description="Fecha de contratación (YYYY-MM-DD)",
     )
-    salary: Optional[float] = Field(
+    salary: float | None = Field(
         None,
         ge=0,
         description="Salario en la moneda local (>= 0)",
@@ -82,7 +84,7 @@ class EmployeeCreate(BaseModel):
 
     @field_validator("phone")
     @classmethod
-    def phone_format(cls, v: Optional[str]) -> Optional[str]:
+    def phone_format(cls, v: str | None) -> str | None:
         """Acepta formatos internacionales básicos: +57 300 123 4567, etc."""
         if v is None:
             return v
@@ -108,48 +110,48 @@ class EmployeeUpdate(BaseModel):
     Todos los campos son opcionales; solo se modifican los enviados.
     """
 
-    full_name: Optional[str] = Field(
+    full_name: str | None = Field(
         None,
         min_length=2,
         max_length=255,
         description="Nuevo nombre completo",
     )
-    email: Optional[EmailStr] = Field(
+    email: EmailStr | None = Field(
         None,
         description="Nuevo email corporativo (debe ser único en la BD)",
     )
-    phone: Optional[str] = Field(
+    phone: str | None = Field(
         None,
         max_length=20,
         description="Nuevo teléfono",
     )
-    position: Optional[str] = Field(
+    position: str | None = Field(
         None,
         max_length=255,
         description="Nuevo cargo",
     )
-    department: Optional[str] = Field(
+    department: str | None = Field(
         None,
         max_length=255,
         description="Nuevo departamento",
     )
-    hire_date: Optional[date] = Field(
+    hire_date: date | None = Field(
         None,
         description="Nueva fecha de contratación",
     )
-    salary: Optional[float] = Field(
+    salary: float | None = Field(
         None,
         ge=0,
         description="Nuevo salario (>= 0)",
     )
-    status: Optional[EmployeeStatus] = Field(
+    status: EmployeeStatus | None = Field(
         None,
         description="Nuevo estado del empleado",
     )
 
     @field_validator("phone")
     @classmethod
-    def phone_format(cls, v: Optional[str]) -> Optional[str]:
+    def phone_format(cls, v: str | None) -> str | None:
         if v is None:
             return v
         cleaned = re.sub(r"[\s\-\(\)]", "", v)
@@ -166,11 +168,11 @@ class EmployeeResponse(BaseModel):
     id: int
     full_name: str
     email: str
-    phone: Optional[str]
-    position: Optional[str]
-    department: Optional[str]
+    phone: str | None
+    position: str | None
+    department: str | None
     hire_date: date
-    salary: Optional[float]
+    salary: float | None
     status: str
 
     class Config:

@@ -11,21 +11,23 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Path, status
+from database import DatabasePool
+from database import check_db_health
+from database import get_db_cursor
+from fastapi import FastAPI
+from fastapi import HTTPException
+from fastapi import Path
+from fastapi import status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from models import EntryCreate
+from models import EntryResponse
+from models import EntryUpdate
+from models import ErrorResponse
+from models import HealthResponse
+from models import InfoResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from pythonjsonlogger import jsonlogger
-
-from database import DatabasePool, check_db_health, get_db_cursor
-from models import (
-    EntryCreate,
-    EntryResponse,
-    EntryUpdate,
-    ErrorResponse,
-    HealthResponse,
-    InfoResponse,
-)
 
 # ── Logging JSON estructurado ─────────────────────────────────
 log_handler = logging.StreamHandler()

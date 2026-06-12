@@ -8,14 +8,16 @@
 
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
-from pydantic import BaseModel, Field, computed_field, model_validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import computed_field
+from pydantic import model_validator
 
 
 # ── Enumeraciones ─────────────────────────────────────────────
-class SaleStatus(str, Enum):
+class SaleStatus(StrEnum):
     """Estados posibles de una venta (RF1)."""
     PENDING = "PENDING"
     CONFIRMED = "CONFIRMED"
@@ -66,14 +68,14 @@ class SaleUpdate(BaseModel):
     """Payload para PUT /api/commercial/sales/{id}.
     Todos los campos son opcionales (actualización parcial)."""
 
-    product_name: Optional[str] = Field(
+    product_name: str | None = Field(
         None, min_length=1, max_length=255
     )
-    quantity: Optional[int] = Field(None, gt=0)
+    quantity: int | None = Field(None, gt=0)
     # # #unit_price: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
-    unit_price: Optional[Decimal] = Field(None, gt=0)
-    customer_name: Optional[str] = Field(None, min_length=1, max_length=255)
-    status: Optional[SaleStatus] = None
+    unit_price: Decimal | None = Field(None, gt=0)
+    customer_name: str | None = Field(None, min_length=1, max_length=255)
+    status: SaleStatus | None = None
 
     @model_validator(mode="after")
     def at_least_one_field(self) -> "SaleUpdate":
@@ -125,7 +127,7 @@ class HealthResponse(BaseModel):
 
     status: str
     service: str = "cicor-commercial-api"
-    db_connected: Optional[bool] = None
+    db_connected: bool | None = None
 
 
 class InfoResponse(BaseModel):

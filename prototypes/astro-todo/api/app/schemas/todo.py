@@ -1,30 +1,30 @@
 import uuid
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel
+from pydantic import Field
 
 Priority = Literal["low", "medium", "high"]
 
 
 class TodoCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
+    description: str | None = None
     priority: Priority = "medium"
 
 
 class TodoUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    completed: Optional[bool] = None
-    priority: Optional[Priority] = None
+    title: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    completed: bool | None = None
+    priority: Priority | None = None
 
 
 class TodoResponse(BaseModel):
     id: uuid.UUID
     title: str
-    description: Optional[str]
+    description: str | None
     completed: bool
     priority: Priority
     created_at: datetime

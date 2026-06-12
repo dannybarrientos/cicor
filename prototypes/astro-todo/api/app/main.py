@@ -4,8 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.infrastructure.database import engine, run_migrations
-from app.routes import health, todos
+from app.infrastructure.database import engine
+from app.infrastructure.database import run_migrations
+from app.routes import health
+from app.routes import todos
 
 
 @asynccontextmanager
