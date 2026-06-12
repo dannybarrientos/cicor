@@ -57,7 +57,6 @@ class SaleCreate(BaseModel):
     )
 
     @computed_field
-    @property
     def total_amount(self) -> Decimal:
         """Calculado automáticamente a partir de quantity × unit_price."""
         return round(Decimal(str(self.quantity)) * self.unit_price, 2)
