@@ -2,108 +2,122 @@
 
 > Plataforma ERP modular con arquitectura de microservicios, diseñada para entornos cloud-native sobre Kubernetes.
 
-## Que es CICOR
+## ¿Qué es CICOR?
 
-CICOR es un ERP empresarial compuesto por **5 modulos de negocio independientes** que operan como microservicios autonomos. Cada modulo tiene su propia API, su propia base de datos y su propio namespace en Kubernetes. La plataforma se despliega en **Minikube** para desarrollo local y escala a **AWS EKS** en produccion sin cambios de arquitectura.
+CICOR es un ERP empresarial compuesto por **5 módulos de negocio independientes** que operan como microservicios autónomos. Cada módulo tiene su propia API, su propia base de datos y su propio namespace en Kubernetes. La plataforma se despliega en **Minikube** para desarrollo local y escala a **AWS EKS** en producción sin cambios de arquitectura.
 
-No es un monolito partido en carpetas: cada modulo puede desplegarse, escalarse y fallar sin afectar a los demas.
+No es un monolito partido en carpetas: cada módulo puede desplegarse, escalarse y fallar sin afectar a los demás.
 
-## Modulos
+## Módulos
 
-| Modulo | Color | API | Puerto | Entidad Principal |
-|---|---|---|---|---|
-| Comercial | `#10B981` | `commercial-api` | `:8001` | Ventas (`sales`) |
-| Inventario | `#3B82F6` | `inventory-api` | `:8002` | Productos (`products`) |
-| Contabilidad | `#EF4444` | `accounting-api` | `:8003` | Asientos contables |
-| Operaciones | `#F97316` | `operations-api` | `:8004` | Procesos |
-| RRHH | `#A855F7` | `hr-api` | `:8005` | Empleados |
+| Módulo | Color | Puerto | Entidad Principal |
+|---|---|---|---|
+| Comercial | `#10B981` | `:8001` | Ventas (`sales`) |
+| Inventario | `#3B82F6` | `:8002` | Productos (`products`) |
+| Contabilidad | `#EF4444` | `:8003` | Asientos contables |
+| Operaciones | `#F97316` | `:8004` | Procesos |
+| RRHH | `#A855F7` | `:8005` | Empleados |
 
-## Arquitectura
-
-CICOR sigue el patron **un microservicio = una API = una base de datos = un namespace**. Cada modulo tiene:
-
-- **API independiente** en Python 3.11 + FastAPI, con Swagger autodocumentado
-- **Base de datos dedicada** en PostgreSQL 15 Alpine, sin esquemas compartidos
-- **Namespace aislado** en Kubernetes con NetworkPolicies que restringen la comunicacion entre modulos
-
-Toda comunicacion entre modulos ocurre via HTTP REST. Por ejemplo, Comercial consulta a Inventario (`POST /api/inventory/reserve`) para validar stock antes de confirmar una venta. Nginx actua como reverse proxy central, enrutando por path (`/api/commercial`, `/api/inventory`, etc.) hacia cada API.
-
-## Inicio Rapido
+## Inicio Rápido
 
 ```bash
-# Clonar y levantar todo con Docker Compose
-git clone <repo-url> && cd cicor/v3
+git clone <repo-url> && cd cicor
 cp .env.example .env
 docker compose up -d
 ```
 
-En minutos tenes las 5 APIs, 5 bases de datos y el frontend corriendo en `http://localhost:3000`.
+En minutos tenés las 5 APIs, 5 bases de datos y el frontend corriendo en `http://localhost:3000`.
 
-> Guia completa de despliegue (incluye Minikube paso a paso) en [`v3/Docs/DESPLIEGUE.md`](v3/Docs/DESPLIEGUE.md).
+## Stack Tecnológico
 
-## Stack Tecnologico
-
-| Capa | Tecnologia |
+| Capa | Tecnología |
 |---|---|
 | Frontend | React 18 + Vite + Tailwind CSS |
 | Backend | Python 3.11 + FastAPI |
-| Bases de datos | PostgreSQL 15 Alpine (1 instancia por modulo) |
+| Bases de datos | PostgreSQL 15 Alpine (1 instancia por módulo) |
 | Reverse proxy | Nginx Alpine |
-| Orquestacion | Kubernetes (Minikube local / AWS EKS produccion) |
+| Orquestación | Kubernetes (Minikube local / AWS EKS producción) |
 | Contenedores | Docker + Docker Compose |
 
 ## Estructura del Proyecto
 
 ```
 cicor/
-├── README.md               ← este archivo
-├── v3/                     ← implementacion principal
-│   ├── apis/               ← 5 APIs FastAPI
-│   ├── databases/          ← scripts SQL por modulo
-│   ├── frontend/           ← React + Vite + Tailwind
-│   ├── nginx/              ← reverse proxy
-│   ├── releases/           ← manifiestos Kubernetes
-│   └── Docs/               ← documentacion completa de v3
-├── docs/                   ← documentacion transversal
-│   ├── design/             ← fase de diseno v2 (misiones)
-│   └── vision-aws.md       ← vision cloud original (AWS)
-└── prototypes/             ← prototipos legacy (Astro)
-    └── astro-todo/
+├── apis/                       ← 5 APIs FastAPI
+│   ├── commercial/             ← Módulo Comercial (+ tests/)
+│   ├── inventory/              ← Módulo Inventario
+│   ├── accounting/             ← Módulo Contabilidad
+│   ├── operations/             ← Módulo Operaciones
+│   └── hr/                     ← Módulo RRHH
+├── databases/                  ← Scripts SQL y Dockerfiles por módulo
+├── frontend/                   ← React + Vite + Tailwind
+├── nginx/                      ← Reverse proxy
+├── kubernetes/                 ← Manifiestos K8s (Minikube y EKS)
+├── scripts/                    ← load-images.sh y .ps1 para Minikube
+├── docs/                       ← Documentación completa
+├── prototypes/                 ← Prototipos (Astro Todo)
+├── docker-compose.yml          ← Orquestación local
+├── .env.example                ← Template de variables de entorno
+└── pyproject.toml              ← Configuración Python (ruff, mypy, pytest)
 ```
 
-## Documentacion
+## Documentación
 
-| Documento | Contenido |
-|---|---|
-| [`v3/README.md`](v3/README.md) | Readme detallado de la implementacion v3 |
-| [`v3/Docs/INDEX.md`](v3/Docs/INDEX.md) | Indice completo de documentacion tecnica |
-| [`v3/Docs/PRESENTACION.md`](v3/Docs/PRESENTACION.md) | Presentacion ejecutiva, arquitectura y demo funcional |
-| [`v3/Docs/DESPLIEGUE.md`](v3/Docs/DESPLIEGUE.md) | Guia de despliegue con Minikube y Docker Compose |
-| [`v3/Docs/REFERENCIA-API.md`](v3/Docs/REFERENCIA-API.md) | Referencia completa de endpoints con ejemplos `curl` |
-| [`v3/Docs/ESQUEMA-BD.md`](v3/Docs/ESQUEMA-BD.md) | Esquemas SQL de las 5 bases de datos |
-| [`v3/Docs/DESARROLLO.md`](v3/Docs/DESARROLLO.md) | Guia para desarrolladores: setup, convenciones, contribucion |
-| [`v3/Docs/SISTEMA-DISEÑO.md`](v3/Docs/SISTEMA-DISEÑO.md) | Sistema de diseno, paleta de colores y componentes |
-| [`docs/design/`](docs/design/) | Documentos de la fase de diseno arquitectonico v2 |
-| [`docs/vision-aws.md`](docs/vision-aws.md) | Vision original de arquitectura cloud sobre AWS |
+| Documento | Contenido | Para quién |
+|---|---|---|
+| [`docs/presentation.md`](docs/presentation.md) | Visión ejecutiva, arquitectura y demo funcional | Todos |
+| [`docs/deployment.md`](docs/deployment.md) | Despliegue local con Docker Compose y Minikube | DevOps, nuevos devs |
+| [`docs/aws-deployment.md`](docs/aws-deployment.md) | Guía paso a paso de despliegue en AWS (EKS, RDS, ECR) | DevOps, SRE |
+| [`docs/development.md`](docs/development.md) | Setup de entorno, convenciones, guía de contribución | Desarrolladores |
+| [`docs/api-reference.md`](docs/api-reference.md) | Endpoints con ejemplos `curl` y Swagger | Frontend y backend |
+| [`docs/database-schema.md`](docs/database-schema.md) | Esquemas SQL, constraints e índices | Backend |
+| [`docs/design-system.md`](docs/design-system.md) | Paleta de colores, tipografía, componentes | Diseñadores, frontend |
+| [`docs/v3-index.md`](docs/v3-index.md) | Índice completo con orden de lectura por rol | Todos |
+
+## Verificación
+
+```bash
+# Contenedores healthy
+docker ps --format 'table {{.Names}}\t{{.Status}}' --filter name=cicor
+
+# APIs vía Nginx
+curl http://localhost/api/commercial/info
+curl http://localhost/api/inventory/info
+curl http://localhost/api/accounting/info
+curl http://localhost/api/operations/info
+curl http://localhost/api/hr/info
+
+# Swagger interactivo
+open http://localhost:8001/docs   # Comercial
+open http://localhost:8002/docs   # Inventario
+open http://localhost:8003/docs   # Contabilidad
+open http://localhost:8004/docs   # Operaciones
+open http://localhost:8005/docs   # RRHH
+
+# Tests
+python -m pytest apis/ -v
+```
 
 ## Desarrollo
 
-**Requisitos minimos:**
+**Requisitos mínimos:**
 - Python 3.11+
 - Node.js 18+
 - Docker y Docker Compose
 - Minikube (para despliegue K8s local)
 
-**Flujo de contribucion:**
-1. Segui las convenciones detalladas en [`v3/Docs/DESARROLLO.md`](v3/Docs/DESARROLLO.md)
-2. Las APIs usan **pytest** para testing; el frontend usa **ESLint** para linting
-3. Cada PR debe incluir tests que validen el cambio y no romper los tests existentes
-4. Los commits siguen el formato [Conventional Commits](https://www.conventionalcommits.org/)
+**Flujo de contribución:**
+1. Seguí las convenciones en [`docs/development.md`](docs/development.md)
+2. Las APIs usan **pytest**; el frontend usa **ESLint**
+3. Cada PR debe incluir tests y no romper los existentes
+4. Commits en formato [Conventional Commits](https://www.conventionalcommits.org/)
 
 ## Roadmap
 
 | Fase | Estado | Objetivo |
 |---|---|---|
-| **1. Minikube local** | ✅ Completado | 5 APIs + 5 DBs + frontend funcional en K8s local |
-| **2. CI/CD** | 🔜 Proximo | Pipeline automatizado de build, test y deploy |
-| **3. AWS EKS produccion** | 📋 Planeado | Migracion a cluster productivo con auto-scaling y monitoreo |
+| **1. Docker Compose local** | ✅ Completado | 5 APIs + 5 DBs + frontend funcional |
+| **2. Minikube local** | ✅ Completado | K8s local con namespaces, ingress, health checks |
+| **3. CI/CD** | ✅ Completado | GitHub Actions: lint, test, typecheck |
+| **4. AWS EKS producción** | 📋 Documentado | [Guía de despliegue AWS](docs/aws-deployment.md) lista |
+| **5. Monitoreo** | 📋 Planeado | Prometheus + Grafana + CloudWatch |
