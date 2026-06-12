@@ -27,9 +27,9 @@ jobs:
         with:
           node-version: "20"
       - run: npm ci
-        working-directory: v3/frontend
+        working-directory: frontend
       - run: npm run lint
-        working-directory: v3/frontend
+        working-directory: frontend
 
   test-python:
     runs-on: ubuntu-latest
@@ -39,8 +39,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r v3/apis/commercial-api/requirements.txt pytest pytest-asyncio
-      - run: cd v3 && python -m pytest apis/tests/ -v
+      - run: pip install -r apis/commercial/requirements.txt pytest pytest-asyncio
+      - run: python -m pytest apis/ -v
 
   typecheck-python:
     runs-on: ubuntu-latest
@@ -50,5 +50,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r v3/apis/commercial-api/requirements.txt mypy
-      - run: mypy v3/apis/ v3/databases/
+      - run: pip install -r apis/commercial/requirements.txt mypy
+      - run: mypy apis/ databases/

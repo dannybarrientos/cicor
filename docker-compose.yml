@@ -99,7 +99,7 @@ services:
   # ─────────────────────────────────────────────────────────
   commercial-api:
     build:
-      context: ./apis/commercial-api
+      context: ./apis/commercial
       dockerfile: Dockerfile
     container_name: cicor-commercial-api
     restart: unless-stopped
@@ -153,7 +153,7 @@ services:
   # ─────────────────────────────────────────────────────────
   inventory-api:
     build:
-      context: ./apis/inventory-api
+      context: ./apis/inventory
       dockerfile: Dockerfile
     container_name: cicor-inventory-api
     restart: unless-stopped
@@ -206,7 +206,7 @@ services:
   # ─────────────────────────────────────────────────────────
   accounting-api:
     build:
-      context: ./apis/accounting-api
+      context: ./apis/accounting
       dockerfile: Dockerfile
     container_name: cicor-accounting-api
     restart: unless-stopped
@@ -259,7 +259,7 @@ services:
   # ─────────────────────────────────────────────────────────
   operations-api:
     build:
-      context: ./apis/operations-api
+      context: ./apis/operations
       dockerfile: Dockerfile
     container_name: cicor-operations-api
     restart: unless-stopped
@@ -312,7 +312,7 @@ services:
   # ─────────────────────────────────────────────────────────
   hr-api:
     build:
-      context: ./apis/hr-api
+      context: ./apis/hr
       dockerfile: Dockerfile
     container_name: cicor-hr-api
     restart: unless-stopped

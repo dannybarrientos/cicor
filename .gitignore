@@ -10,7 +10,8 @@ build/
 
 # ── Node ─────────────────────────────────────────────────────
 node_modules/
-v3/frontend/dist/
+frontend/dist/
+repomix-output.xml
 
 # ── Docker / Environment ─────────────────────────────────────
 .env

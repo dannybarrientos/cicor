@@ -8,10 +8,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-COMMERCIAL_API_DIR = os.path.join(os.path.dirname(__file__), "..", "commercial-api")
-TESTS_DIR = os.path.dirname(__file__)
+COMMERCIAL_API_DIR = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, COMMERCIAL_API_DIR)
-sys.path.insert(0, TESTS_DIR)
 
 
 def _inject_fake_modules():

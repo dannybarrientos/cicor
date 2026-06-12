@@ -22,7 +22,7 @@ strict = false
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["v3/apis/tests"]
+testpaths = ["apis"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"

@@ -17,14 +17,14 @@ foreach ($mod in $modules) {
     docker build -t cicor-$mod-db:v3-local ./databases/$mod
 
     Write-Host "Compilando API para modulo $mod..."
-    docker build -t cicor-$mod-api:v3-local ./apis/$mod-api
+    docker build -t cicor-$mod-api:v3-local ./apis/$mod
 
     Write-Host "Cargando DB y API para módulo: $mod..."
     minikube image load "cicor-$mod-db:v3-local"
     minikube image load "cicor-$mod-api:v3-local"
 
     Write-Host "Applicando modulos: $mod..."
-    kubectl apply -f "releases/$mod/bundle.yaml"
+    kubectl apply -f "kubernetes/$mod-bundle.yaml"
 }
 
 Write-Host "¡Todas las imágenes han sido cargadas y aplicadas exitosamente!"
