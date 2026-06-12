@@ -593,15 +593,16 @@ minikube tunnel
 # → Expone LoadBalancer en 127.0.0.1
 
 # 4. Construir imágenes Docker dentro de Minikube
-powershell -ExecutionPolicy Bypass -File .\load_images.ps1
+./scripts/load-images.sh       # Linux/Mac
+# .\scripts\load-images.ps1    # Windows
 
 # 5. Aplicar manifiestos Kubernetes
-kubectl apply -f releases/base/web.yaml
-kubectl apply -f releases/commercial/bundle.yaml
-kubectl apply -f releases/inventory/bundle.yaml
-kubectl apply -f releases/accounting/bundle.yaml
-kubectl apply -f releases/operations/bundle.yaml
-kubectl apply -f releases/hr/bundle.yaml
+kubectl apply -f kubernetes/base-web.yaml
+kubectl apply -f kubernetes/commercial-bundle.yaml
+kubectl apply -f kubernetes/inventory-bundle.yaml
+kubectl apply -f kubernetes/accounting-bundle.yaml
+kubectl apply -f kubernetes/operations-bundle.yaml
+kubectl apply -f kubernetes/hr-bundle.yaml
 ```
 
 ### Verificación

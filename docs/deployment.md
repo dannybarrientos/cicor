@@ -20,7 +20,7 @@ La forma más simple de levantar todo el sistema. Un solo comando arranca los 12
 
 ```bash
 git clone <repo-url> cicor
-cd cicor/v3
+cd cicor
 cp .env.example .env
 ```
 
@@ -135,25 +135,28 @@ El túnel es necesario porque en Docker Desktop las IPs de Minikube no son acces
 
 ### 3. Construir y cargar imágenes
 
-El script `load_images.ps1` compila todas las imágenes Docker del proyecto y las carga en el registro interno de Minikube. Luego aplica los manifiestos de Kubernetes.
+El script `scripts/load-images.sh` (Linux/Mac) y `scripts/load-images.ps1` (Windows) compilan todas las imágenes Docker del proyecto y las cargan en el registro interno de Minikube. Luego aplican los manifiestos de Kubernetes.
+
+**En Linux/Mac:**
+```bash
+./scripts/load-images.sh
+```
 
 **En Windows (PowerShell como Administrador):**
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\load_images.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\load-images.ps1
 ```
 
-**¿Qué hace `load_images.ps1`?**
+**¿Qué hace el script?**
 
 1. Compila la imagen del frontend (`docker build -t cicor-frontend:v3-local ./frontend`)
 2. Carga la imagen del frontend en Minikube (`minikube image load cicor-frontend:v3-local`)
-3. Aplica el bundle base del frontend (`kubectl apply -f releases/base/web.yaml`)
+3. Aplica el bundle base del frontend (`kubectl apply -f kubernetes/base-web.yaml`)
 4. Para cada uno de los 5 módulos (accounting, commercial, hr, inventory, operations):
    - Compila la imagen de la base de datos (`docker build -t cicor-$mod-db:v3-local ./databases/$mod`)
-   - Compila la imagen de la API (`docker build -t cicor-$mod-api:v3-local ./apis/$mod-api`)
+   - Compila la imagen de la API (`docker build -t cicor-$mod-api:v3-local ./apis/$mod`)
    - Carga ambas en Minikube
-   - Aplica el bundle del módulo (`kubectl apply -f releases/$mod/bundle.yaml`)
-
-Si estás en Mac o Linux y no tenés PowerShell, ejecutá los comandos manualmente siguiendo el mismo orden (ver `load_images.ps1` como referencia).
+   - Aplica el bundle del módulo (`kubectl apply -f kubernetes/$mod-bundle.yaml`)
 
 ### 4. Configurar el dominio local
 
@@ -206,25 +209,19 @@ http://cicor.local
 
 ---
 
-## Estructura de `releases/`
+## Estructura de `kubernetes/`
 
-El directorio `releases/` contiene los manifiestos de Kubernetes organizados por módulo:
+El directorio `kubernetes/` contiene los manifiestos de Kubernetes organizados por módulo:
 
 ```
-releases/
-├── README.md          ← Este archivo (descripción general)
-├── base/
-│   └── web.yaml       ← Bundle del frontend (Deployment, Service, Ingress, Namespace)
-├── commercial/
-│   └── bundle.yaml    ← Bundle del módulo Comercial (API + DB + ConfigMap + Secret + PVC + Ingress)
-├── inventory/
-│   └── bundle.yaml    ← Bundle del módulo Inventario
-├── accounting/
-│   └── bundle.yaml    ← Bundle del módulo Contabilidad
-├── operations/
-│   └── bundle.yaml    ← Bundle del módulo Operaciones
-└── hr/
-    └── bundle.yaml    ← Bundle del módulo Recursos Humanos
+kubernetes/
+├── README.md                  ← Descripción y orden de aplicación
+├── base-web.yaml              ← Bundle del frontend (Deployment, Service, Ingress, Namespace)
+├── commercial-bundle.yaml     ← Bundle del módulo Comercial (API + DB + ConfigMap + Secret + PVC + Ingress)
+├── inventory-bundle.yaml      ← Bundle del módulo Inventario
+├── accounting-bundle.yaml     ← Bundle del módulo Contabilidad
+├── operations-bundle.yaml     ← Bundle del módulo Operaciones
+└── hr-bundle.yaml             ← Bundle del módulo Recursos Humanos
 ```
 
 Cada `bundle.yaml` contiene en un solo archivo (separado por `---`):
@@ -236,10 +233,10 @@ Cada `bundle.yaml` contiene en un solo archivo (separado por `---`):
 - **Deployment + Service** para la API (`cicor-<modulo>-api`)
 - **Ingress** — rutea `cicor.local/api/<modulo>` al Service de la API
 
-El bundle `base/web.yaml` contiene el frontend (React servido por Nginx) y su Ingress en la raíz (`/`).
+El bundle `base-web.yaml` contiene el frontend (React servido por Nginx) y su Ingress en la raíz (`/`).
 
 **Orden de aplicación recomendado:**
-1. `releases/base/web.yaml`
+1. `kubernetes/base-web.yaml`
 2. Los 5 bundles de módulo (el orden entre módulos no importa)
 
 La UI y las APIs usan `cicor.local` como host de Ingress.

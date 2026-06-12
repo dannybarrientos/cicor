@@ -14,21 +14,22 @@ Guía para contribuir al desarrollo de CICOR. Cubre la estructura del proyecto, 
 
 ---
 
-## Estructura del Proyecto (`v3/`)
+## Estructura del Proyecto
 
 ```
-v3/
+cicor/
 ├── apis/                          ← APIs (FastAPI), una por módulo
-│   ├── commercial-api/
+│   ├── commercial/
 │   │   ├── main.py                ← Punto de entrada, rutas FastAPI
 │   │   ├── models.py              ← Schemas Pydantic (entrada/salida)
 │   │   ├── database.py            ← Pool de conexiones PostgreSQL
 │   │   ├── requirements.txt       ← Dependencias Python
-│   │   └── Dockerfile             ← Imagen multi-stage (python:3.11-slim)
-│   ├── inventory-api/
-│   ├── accounting-api/
-│   ├── operations-api/
-│   └── hr-api/
+│   │   ├── Dockerfile             ← Imagen multi-stage (python:3.11-slim)
+│   │   └── tests/                 ← Tests unitarios y de integración
+│   ├── inventory/
+│   ├── accounting/
+│   ├── operations/
+│   └── hr/
 │
 ├── databases/                     ← Scripts SQL y Dockerfiles de BD
 │   ├── commercial/
@@ -72,12 +73,13 @@ v3/
 │   ├── default.conf               ← Reverse proxy para Docker Compose
 │   └── Dockerfile                 ← Imagen nginx con la config incluida
 │
-├── releases/                      ← Manifiestos Kubernetes (Minikube)
-│   ├── base/web.yaml              ← Bundle del frontend
-│   ├── commercial/bundle.yaml     ← Bundle Comercial
-│   ├── inventory/bundle.yaml
-│   ├── accounting/bundle.yaml
-│   ├── operations/bundle.yaml
+├── kubernetes/                    ← Manifiestos Kubernetes (Minikube)
+│   ├── base-web.yaml              ← Bundle del frontend
+│   ├── commercial-bundle.yaml     ← Bundle Comercial
+│   ├── inventory-bundle.yaml
+│   ├── accounting-bundle.yaml
+│   ├── operations-bundle.yaml
+│   └── hr-bundle.yaml
 │   └── hr/bundle.yaml
 │
 ├── docs/                          ← Documentación del proyecto
@@ -107,7 +109,7 @@ Cada API sigue el mismo patrón de tres archivos principales:
 #### Ejecutar una API localmente sin Docker
 
 ```bash
-cd v3/apis/commercial-api
+cd apis/commercial
 
 # Crear entorno virtual
 python3.11 -m venv .venv
@@ -162,7 +164,7 @@ El patrón completo para una nueva entidad es:
 #### Instalación y ejecución
 
 ```bash
-cd v3/frontend
+cd frontend
 npm install
 npm run dev
 ```
@@ -383,7 +385,7 @@ Duplicá el bloque de un módulo existente (API + DB) y ajustá nombres, puertos
 ### 6. Crear los manifiestos de Kubernetes
 
 ```
-releases/nuevo-modulo/
+kubernetes/nuevo-modulo-bundle.yaml
 └── bundle.yaml    ← Namespace, ConfigMap, Secret, PVC, DB Deployment+Service, API Deployment+Service, Ingress
 ```
 
