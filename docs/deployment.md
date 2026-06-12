@@ -344,3 +344,11 @@ El archivo `.env` (creado a partir de `.env.example`) controla toda la configura
 | `HR_DB_PORT_HOST` | `5435` | Puerto host de la BD RRHH |
 
 Para desarrollo local, los valores por defecto del `.env.example` son suficientes. Solo ajustalos si tenés conflictos de puertos.
+
+---
+
+## Próximo paso: AWS
+
+Cuando estés listo para producción, seguí la guía de despliegue en AWS:
+
+→ [`aws-deployment.md`](aws-deployment.md) — EKS, RDS, ECR, Route 53, CI/CD

@@ -8,6 +8,7 @@
 |---|---|---|
 | [`presentation.md`](presentation.md) | Visión ejecutiva, arquitectura general, demo funcional y roadmap | Stakeholders, arquitectos y nuevos devs |
 | [`deployment.md`](deployment.md) | Guía paso a paso de despliegue local con Docker Compose y Minikube | DevOps y nuevos devs |
+| [`aws-deployment.md`](aws-deployment.md) | Guía paso a paso de despliegue en AWS (EKS, RDS, ECR, Route 53) | DevOps, SRE, arquitectos cloud |
 | [`api-reference.md`](api-reference.md) | Referencia completa de endpoints por módulo con ejemplos `curl` | Desarrolladores frontend y backend |
 | [`database-schema.md`](database-schema.md) | Esquemas SQL de las 5 bases de datos, constraints, índices y reglas de negocio | Desarrolladores backend |
 | [`design-system.md`](design-system.md) | Paleta de colores por módulo, tipografía, componentes Tailwind y guías visuales | Diseñadores y desarrolladores frontend |
@@ -30,7 +31,8 @@
 ### DevOps / SRE
 1. [`presentation.md`](presentation.md) — arquitectura de despliegue
 2. [`deployment.md`](deployment.md) — paso a paso con Minikube y Docker Compose
-3. [`api-reference.md`](api-reference.md) — health checks y monitoreo
+3. [`aws-deployment.md`](aws-deployment.md) — despliegue en AWS EKS
+4. [`api-reference.md`](api-reference.md) — health checks y monitoreo
 
 ### Desarrollador frontend
 1. [`presentation.md`](presentation.md) — contexto general
